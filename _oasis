@@ -1,0 +1,26 @@
+OASISFormat:      0.3
+OCamlVersion:     >= 4.02.3
+FindlibVersion:   >= 1.3.2
+Name:             ppx_fields_conv
+Version:          113.09.00
+Synopsis:         Generation of accessor and iteration functions for ocaml records
+Authors:          Jane Street Group, LLC <opensource@janestreet.com>
+Copyrights:       (C) 2015 Jane Street Group LLC <opensource@janestreet.com>
+Maintainers:      Jane Street Group, LLC <opensource@janestreet.com>
+License:          Apache-2.0
+LicenseFile:      LICENSE.txt
+Homepage:         https://github.com/janestreet/ppx_fields_conv
+Plugins:          StdFiles (0.3), DevFiles (0.3), META (0.3)
+XStdFilesAUTHORS: false
+XStdFilesREADME:  false
+BuildTools:       ocamlbuild
+
+Library ppx_fields_conv
+  Path:               src
+  Pack:               false
+  Modules:            Ppx_fields_conv
+  BuildDepends:       compiler-libs,
+                      ppx_core,
+                      ppx_driver,
+                      ppx_type_conv,
+                      ppx_tools.metaquot
