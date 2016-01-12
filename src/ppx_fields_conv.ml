@@ -329,7 +329,6 @@ module Gen_sig = struct
   let generate ~loc ~path:_ (rec_flag, tds) =
     check_at_least_one_record ~loc rec_flag tds;
     List.concat_map tds ~f:fields_of_td
-    |> Type_conv.Generator_result.make_just_after
 
 end
 
@@ -485,14 +484,17 @@ module Gen_struct = struct
   let iter_fun ~loc ty =
     let names = Inspect.field_names ty in
     let iter_field field_name =
-      [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ] [%e A.exp_name ~loc field_name] ] in
+      [%expr
+        ([%e A.exp_name ~loc (field_name ^ "_fun__") ]
+           [%e A.exp_name ~loc field_name]
+           : unit)
+      ] in
     let body =
       List.fold_left (List.tl names)
         ~init:(iter_field (List.hd names))
         ~f:(fun acc n -> [%expr ( [%e acc] ; [%e iter_field n] ) ]) in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
-    let lambda = Create.lambda ~loc
-      (patterns) body in
+    let lambda = Create.lambda ~loc (patterns) body in
     A.str_item ~loc "iter" lambda
 
   let direct_iter_fun ~loc ty =
@@ -641,7 +643,6 @@ module Gen_struct = struct
   let generate ~loc ~path:_ (rec_flag, tds) =
     check_at_least_one_record ~loc rec_flag tds;
     List.concat_map tds ~f:fields_of_td
-    |> Type_conv.Generator_result.make_just_after
 
 end
 

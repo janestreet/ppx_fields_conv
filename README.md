@@ -41,12 +41,20 @@ module Fields : sig
   val quantity  : (t, int             ) Field.t
   val dir       : (t, [ `Buy | `Sell ]) Field.t
 
- val create :
-   dir:[ `Buy | `Sell ]
-   -> quantity  : int
-   -> price     : float
-   -> cancelled : bool
-   -> t
+  val create :
+    dir:[ `Buy | `Sell ]
+    -> quantity  : int
+    -> price     : float
+    -> cancelled : bool
+    -> t
+
+  val make_creator
+     : 'acc
+    -> dir:      ((t, [ `Buy | `Sell ]) Field.t -> 'acc -> ('arg -> [ `Buy | `Sell ]) * 'acc)
+    -> quantity: ((t, int             ) Field.t -> 'acc -> ('arg -> int) * 'acc)
+    -> price:    ((t, float           ) Field.t -> 'acc -> ('arg -> float) * 'acc)
+    -> cancelled:((t, bool            ) Field.t -> 'acc -> ('arg -> bool) * 'acc)
+    -> ('arg -> t) * 'acc
 
   val fold :
     init:'a
