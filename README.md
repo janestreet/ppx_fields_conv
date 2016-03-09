@@ -10,6 +10,7 @@ Basic Usage
 
 If you define a type as follows:
 
+<!--BEGIN type_decl-->
 ```ocaml
 type t = {
   dir : [ `Buy | `Sell ];
@@ -18,9 +19,11 @@ type t = {
   mutable cancelled : bool;
 } [@@deriving fields]
 ```
+<!--END-->
 
 then code will be generated for functions of the following type:
 
+<!--BEGIN generated_sig-->
 ```ocaml
 (* getters *)
 val cancelled : t -> bool
@@ -41,59 +44,58 @@ module Fields : sig
   val quantity  : (t, int             ) Field.t
   val dir       : (t, [ `Buy | `Sell ]) Field.t
 
-  val create :
-    dir:[ `Buy | `Sell ]
+  val create
+    :  dir:[ `Buy | `Sell ]
     -> quantity  : int
     -> price     : float
     -> cancelled : bool
     -> t
 
   val make_creator
-     : 'acc
-    -> dir:      ((t, [ `Buy | `Sell ]) Field.t -> 'acc -> ('arg -> [ `Buy | `Sell ]) * 'acc)
-    -> quantity: ((t, int             ) Field.t -> 'acc -> ('arg -> int) * 'acc)
-    -> price:    ((t, float           ) Field.t -> 'acc -> ('arg -> float) * 'acc)
-    -> cancelled:((t, bool            ) Field.t -> 'acc -> ('arg -> bool) * 'acc)
-    -> ('arg -> t) * 'acc
+    :  dir:      ((t, [ `Buy | `Sell ]) Field.t -> 'a -> ('arg -> [ `Buy | `Sell ]) * 'b)
+    -> quantity: ((t, int             ) Field.t -> 'b -> ('arg -> int             ) * 'c)
+    -> price:    ((t, float           ) Field.t -> 'c -> ('arg -> float           ) * 'd)
+    -> cancelled:((t, bool            ) Field.t -> 'd -> ('arg -> bool            ) * 'e)
+    -> 'a -> ('arg -> t) * 'e
 
-  val fold :
-    init:'a
-    -> dir      :('a -> (t, [ `Buy | `Sell ]) Field.t -> 'a)
-    -> quantity :('a -> (t, int             ) Field.t -> 'a)
-    -> price    :('a -> (t, float           ) Field.t -> 'a)
-    -> cancelled:('a -> (t, bool            ) Field.t -> 'a)
-    -> 'a
+  val fold
+    :  init:'a
+    -> dir      :('a -> (t, [ `Buy | `Sell ]) Field.t -> 'b)
+    -> quantity :('b -> (t, int             ) Field.t -> 'c)
+    -> price    :('c -> (t, float           ) Field.t -> 'd)
+    -> cancelled:('d -> (t, bool            ) Field.t -> 'e)
+    -> 'e
 
-  val map :
-    dir         :((t, [ `Buy | `Sell ]) Field.t -> [ `Buy | `Sell ])
+  val map
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> [ `Buy | `Sell ])
     -> quantity :((t, int             ) Field.t -> int)
     -> price    :((t, float           ) Field.t -> float)
     -> cancelled:((t, bool            ) Field.t -> bool)
     -> t
 
-  val iter :
-    dir         :((t, [ `Buy | `Sell ]) Field.t -> unit)
+  val iter
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> unit)
     -> quantity :((t, int             ) Field.t -> unit)
     -> price    :((t, float           ) Field.t -> unit)
     -> cancelled:((t, bool            ) Field.t -> unit)
     -> unit
 
-  val for_all :
-    dir         :((t, [ `Buy | `Sell ]) Field.t -> bool)
+  val for_all
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> bool)
     -> quantity :((t, int             ) Field.t -> bool)
     -> price    :((t, float           ) Field.t -> bool)
     -> cancelled:((t, bool            ) Field.t -> bool)
     -> bool
 
-  val exists :
-    dir         :((t, [ `Buy | `Sell ]) Field.t -> bool)
+  val exists
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> bool)
     -> quantity :((t, int             ) Field.t -> bool)
     -> price    :((t, float           ) Field.t -> bool)
     -> cancelled:((t, bool            ) Field.t -> bool)
     -> bool
 
-  val to_list :
-    dir         :((t, [ `Buy | `Sell ]) Field.t -> 'a)
+  val to_list
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> 'a)
     -> quantity :((t, int             ) Field.t -> 'a)
     -> price    :((t, float           ) Field.t -> 'a)
     -> cancelled:((t, bool            ) Field.t -> 'a)
@@ -104,28 +106,61 @@ module Fields : sig
   (** Functions that take a record directly *)
   module Direct : sig
 
-      val iter :
-        t ->
-        dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> unit) ->
-        quantity :((t, int             ) Field.t -> t -> int              -> unit) ->
-        price    :((t, float           ) Field.t -> t -> float            -> unit) ->
-        cancelled:((t, bool            ) Field.t -> t -> bool             -> unit) ->
-        'd
+      val fold
+        :  t
+        -> init:'a
+        -> dir      :('a -> (t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> 'b)
+        -> quantity :('b -> (t, int             ) Field.t -> t -> int              -> 'c)
+        -> price    :('c -> (t, float           ) Field.t -> t -> float            -> 'd)
+        -> cancelled:('d -> (t, bool            ) Field.t -> t -> bool             -> 'e)
+        -> 'e
 
-      val fold :
-        t ->
-        init:'a ->
-        dir      :('a -> (t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> 'a) ->
-        quantity :('a -> (t, int             ) Field.t -> t -> int              -> 'a) ->
-        price    :('a -> (t, float           ) Field.t -> t -> float            -> 'a) ->
-        cancelled:('a -> (t, bool            ) Field.t -> t -> bool             -> 'a) ->
-        'e
+      val map
+        :  t
+        -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> [ `Buy | `Sell ])
+        -> quantity :((t, int             ) Field.t -> t -> int              -> int)
+        -> price    :((t, float           ) Field.t -> t -> float            -> float)
+        -> cancelled:((t, bool            ) Field.t -> t -> bool             -> bool)
+        -> t
 
+      val iter
+        :  t
+        -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> unit)
+        -> quantity :((t, int             ) Field.t -> t -> int              -> unit)
+        -> price    :((t, float           ) Field.t -> t -> float            -> unit)
+        -> cancelled:((t, bool            ) Field.t -> t -> bool             -> unit)
+        -> unit
+
+      val for_all
+        :  t
+        -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> bool)
+        -> quantity :((t, int             ) Field.t -> t -> int              -> bool)
+        -> price    :((t, float           ) Field.t -> t -> float            -> bool)
+        -> cancelled:((t, bool            ) Field.t -> t -> bool             -> bool)
+        -> bool
+
+      val exists
+        :  t
+        -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> bool)
+        -> quantity :((t, int             ) Field.t -> t -> int              -> bool)
+        -> price    :((t, float           ) Field.t -> t -> float            -> bool)
+        -> cancelled:((t, bool            ) Field.t -> t -> bool             -> bool)
+        -> bool
+
+      val to_list
+        :  t
+        -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> 'a)
+        -> quantity :((t, int             ) Field.t -> t -> int              -> 'a)
+        -> price    :((t, float           ) Field.t -> t -> float            -> 'a)
+        -> cancelled:((t, bool            ) Field.t -> t -> bool             -> 'a)
+        -> 'a list
+        
       val set_all_mutable_fields : t -> cancelled:bool -> unit
     end
 
 end
 ```
+<!--END-->
 
 Use of `[@@deriving fields]` in an .mli will extend the signature for
 functions with the above types; In an .ml, definitions will be
