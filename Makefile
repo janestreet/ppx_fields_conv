@@ -2,7 +2,7 @@
 
 SETUP := setup.exe
 NAME := ppx_fields_conv
-PREFIX = $(shell grep ^prefix= setup.data | cut -d\" -f 2)
+PREFIX ?= $(shell grep ^prefix= setup.data | cut -d\" -f 2)
 
 # Default rule
 default: build
