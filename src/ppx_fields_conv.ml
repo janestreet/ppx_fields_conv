@@ -18,7 +18,7 @@ module Type_conv = Ppx_type_conv.Std.Type_conv
 module A = struct (* Additional AST construction helpers *)
 
   let exp_string : (loc:Location.t -> string -> expression) = fun ~loc s ->
-    pexp_constant ~loc (Const_string (s,None))
+    pexp_constant ~loc (Pconst_string (s,None))
 
   let pat_name : (loc:Location.t -> string -> pattern) = fun ~loc name ->
     ppat_var ~loc (Location.mkloc name loc)
@@ -115,10 +115,10 @@ module Gen_sig = struct
   let apply_type ~loc ~ty_name ~tps =
     ptyp_constr ~loc (A.lid_name ~loc ty_name) tps
 
-  let label_arg name ty = (name,ty)
+  let label_arg name ty = (Labelled name,ty)
 
   let field_arg ~loc ~private_ ~record
-      (f: field:core_type -> ty:core_type -> 'a) labdec : string * 'a =
+      (f: field:core_type -> ty:core_type -> 'a) labdec : arg_label * 'a =
     let {pld_name=name; pld_type=ty; _} = labdec in
     label_arg name.txt (
       f ~field:(field_t ~loc private_ [record; ty]) ~ty)
@@ -133,7 +133,7 @@ module Gen_sig = struct
     let types = List.mapi labdecs ~f in
     let create_record_f = [%type:  'input__ -> ([%t record]) ] in
     let t = Create.lambda_sig ~loc
-      (types @ [ "", acc 0 ])
+      (types @ [ Nolabel, acc 0 ])
       ([%type:  ( [%t create_record_f] * [%t acc (List.length labdecs)]) ])
     in
     A.sig_item ~loc "make_creator" t
@@ -153,7 +153,7 @@ module Gen_sig = struct
     let acc i =
       ptyp_var ~loc ("acc__" ^ string_of_int i)
     in
-    let f i arg : (string * core_type) =
+    let f i arg : (arg_label * core_type) =
       field_arg ~loc ~private_ ~record (fun ~field ~ty:_ ->
         [%type:  [%t acc i] -> [%t field] -> [%t acc (i+1)]]) arg
     in
@@ -177,7 +177,7 @@ module Gen_sig = struct
     let types = List.mapi labdecs ~f in
     let init_ty = label_arg "init" (acc 0) in
     let t =
-      Create.lambda_sig ~loc (("",record) :: init_ty :: types) (acc (List.length labdecs))
+      Create.lambda_sig ~loc ((Nolabel,record) :: init_ty :: types) (acc (List.length labdecs))
     in
       A.sig_item ~loc "fold" t
 
@@ -194,7 +194,7 @@ module Gen_sig = struct
     let f = field_arg ~loc ~private_ ~record (fun ~field ~ty:field_ty ->
       [%type:  [%t field] -> [%t record] -> [%t field_ty] -> bool ] ) in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~loc (("",record) :: types) [%type:  bool ] in
+    let t = Create.lambda_sig ~loc ((Nolabel,record) :: types) [%type:  bool ] in
     A.sig_item ~loc fun_name t
 
   let iter_fun ~private_ ~ty_name ~tps ~loc labdecs =
@@ -210,7 +210,7 @@ module Gen_sig = struct
     let f = field_arg ~loc ~private_ ~record (fun ~field ~ty:field_ty ->
       [%type:  [%t field] -> [%t record] -> [%t field_ty] -> unit ]) in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~loc (("",record) :: types) [%type:  unit ] in
+    let t = Create.lambda_sig ~loc ((Nolabel,record) :: types) [%type:  unit ] in
     A.sig_item ~loc "iter" t
 
   let to_list_fun ~private_ ~ty_name ~tps ~loc labdecs =
@@ -227,7 +227,7 @@ module Gen_sig = struct
     let f = field_arg ~loc ~private_ ~record (fun ~field ~ty:field_ty ->
       [%type:  [%t field] -> [%t record] -> [%t field_ty] -> 'elem__ ]) in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~loc (("",record) :: types) [%type:  'elem__ list] in
+    let t = Create.lambda_sig ~loc ((Nolabel,record) :: types) [%type:  'elem__ list] in
     A.sig_item ~loc "to_list" t
 
   let map_fun ~ty_name ~tps ~loc labdecs =
@@ -243,7 +243,7 @@ module Gen_sig = struct
     let f = field_arg ~loc ~private_:Public ~record (fun ~field ~ty:field_ty ->
       [%type:  [%t field] -> [%t record] -> [%t field_ty] -> [%t field_ty] ]) in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~loc (("",record) :: types) record in
+    let t = Create.lambda_sig ~loc ((Nolabel,record) :: types) record in
     A.sig_item ~loc "map" t
 
   let map_poly ~private_ ~ty_name ~tps ~loc _ =
@@ -281,7 +281,7 @@ module Gen_sig = struct
       List.fold_right labdecs ~init:[%type: unit] ~f:(fun labdec acc ->
         match labdec.pld_mutable with
         | Immutable -> acc
-        | Mutable -> ptyp_arrow ~loc labdec.pld_name.txt labdec.pld_type acc
+        | Mutable -> ptyp_arrow ~loc (Labelled labdec.pld_name.txt) labdec.pld_type acc
       )
     in
     A.sig_item ~loc "set_all_mutable_fields" [%type: [%t record] -> [%t labels]]
@@ -440,7 +440,7 @@ module Gen_struct = struct
       match label with
       | None    -> name
       | Some n  -> n in
-    l,
+    (Labelled l),
     A.pat_name ~loc name
 
   let label_arg_fun ~loc name =
@@ -460,7 +460,7 @@ module Gen_struct = struct
                 ~expr:[%expr [%e A.exp_name ~loc (field_name ^ "_gen__")] acc__]
             ] acc)
       in
-      Create.lambda ~loc [ ("",[%pat? acc__ ]) ] body
+      Create.lambda ~loc [ (Nolabel,[%pat? acc__ ]) ] body
     in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let body0 = [%expr ([%e f], compile_acc__) ] in
@@ -480,7 +480,7 @@ module Gen_struct = struct
                   compile_acc__]
           ] acc)
     in
-    let f = Create.lambda ~loc (patterns @ [ ("",[%pat? compile_acc__ ]) ]) body in
+    let f = Create.lambda ~loc (patterns @ [ (Nolabel,[%pat? compile_acc__ ]) ]) body in
     A.str_item ~loc "make_creator" f
 
   let simple_creation_fun ~loc _record_name labdecs =
@@ -515,7 +515,7 @@ module Gen_struct = struct
     let body = List.fold_left names ~init:[%expr init__ ] ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let init = label_arg ~label:"init" ~loc "init__" in
-    let lambda = Create.lambda ~loc ( ("",[%pat? record__ ]) :: init :: patterns ) body in
+    let lambda = Create.lambda ~loc ( (Nolabel,[%pat? record__ ]) :: init :: patterns ) body in
     A.str_item ~loc "fold" lambda
 
   let and_fun ~loc labdecs =
@@ -540,7 +540,7 @@ module Gen_struct = struct
     in
     let body = List.fold_left names ~init:(A.exp_true ~loc) ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
-    let lambda = Create.lambda ~loc (("",[%pat? record__ ]) :: patterns) body in
+    let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
     A.str_item ~loc "for_all" lambda
 
   let or_fun ~loc labdecs =
@@ -566,7 +566,7 @@ module Gen_struct = struct
     let body =
       List.fold_left names ~init:[%expr false ] ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
-    let lambda = Create.lambda ~loc (("",[%pat? record__ ]) :: patterns) body in
+    let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
     A.str_item ~loc "exists" lambda
 
   let iter_fun ~loc labdecs =
@@ -599,7 +599,7 @@ module Gen_struct = struct
         ~init:(iter_field (List.hd names))
         ~f:(fun acc n -> [%expr ( [%e acc] ; [%e iter_field n] ) ]) in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
-    let lambda = Create.lambda ~loc (("",[%pat? record__ ]) :: patterns) body in
+    let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
     A.str_item ~loc "iter" lambda
 
   let map_fun ~loc labdecs =
@@ -624,7 +624,7 @@ module Gen_struct = struct
       in (field_name, e )))
     in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
-    let lambda = Create.lambda ~loc (("",[%pat? record__ ]) :: patterns) body in
+    let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
     A.str_item ~loc "map" lambda
 
   let to_list_fun ~loc labdecs =
@@ -649,7 +649,7 @@ module Gen_struct = struct
           :: [%e tail] ]
     in
     let body = List.fold_right names ~init:[%expr [ ] ] ~f:fold in
-    let lambda = Create.lambda ~loc (("",[%pat? record__ ]) :: patterns) body in
+    let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
     A.str_item ~loc "to_list" lambda
 
   let map_poly ~loc labdecs =
@@ -658,7 +658,7 @@ module Gen_struct = struct
       [%expr record__.Fieldslib.Field.f [%e A.exp_name ~loc name] :: [%e acc] ]
     in
     let body = List.fold_right names ~init:[%expr []] ~f:fold in
-    A.str_item ~loc "map_poly" (pexp_fun ~loc "" None [%pat? record__] body)
+    A.str_item ~loc "map_poly" (pexp_fun ~loc Nolabel None [%pat? record__] body)
 
   let sequence_ ~loc xs =
     match (List.rev xs) with
@@ -688,10 +688,10 @@ module Gen_struct = struct
         | Immutable -> acc
         | Mutable ->
           let field_name = labdec.pld_name.txt in
-          pexp_fun ~loc field_name None (A.pat_name ~loc field_name) acc)
+          pexp_fun ~loc (Labelled field_name) None (A.pat_name ~loc field_name) acc)
     in
     A.str_item ~loc "set_all_mutable_fields" (
-      pexp_fun ~loc "" None (A.pat_name ~loc record_name) function_)
+      pexp_fun ~loc Nolabel None (A.pat_name ~loc record_name) function_)
 
   let record ~private_ ~record_name ~loc (labdecs:label_declaration list) : structure =
     let getter_and_setters, fields = gen_fields ~private_ ~loc labdecs in
