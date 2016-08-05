@@ -1,0 +1,13 @@
+(library
+ ((name fieldslib_test)
+  (libraries (fieldslib))
+  (preprocess (((pps (pa_fields_conv ppx_inline_test)) All)))))
+
+(rule
+ ((targets (example_from_doc.ml))
+  (deps (../README.md gen_test_from_doc.sh))
+  (action "./gen_test_from_doc.sh ../README.md > ${@}")))
+
+(toplevel_expect_tests
+ ((libraries (fieldslib ppx_fields_conv))
+  (no_ppx_jane true)))
