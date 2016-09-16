@@ -80,18 +80,44 @@ module Inspect = struct
   let field_names labdecs = List.map labdecs ~f:(fun labdec -> labdec.pld_name.txt)
 end
 
+let runtime_module_outside_base = Longident.parse "Fieldslib.Field"
+let runtime_module_inside_base = Longident.parse "Field"
+let runtime_module () =
+  if Ppx_inside_base.get ()
+  then runtime_module_inside_base
+  else runtime_module_outside_base
+let runtime_ident_path names =
+  List.fold_left names ~init:(runtime_module ())
+    ~f:(fun acc name -> Longident.Ldot (acc, name))
+let runtime_ident name = runtime_ident_path [name]
+let runtime_loc_ident_path ~loc names = Located.mk ~loc (runtime_ident_path names)
+let runtime_loc_ident ~loc name = Located.mk ~loc (runtime_ident name)
+let runtime_typ ~loc name args = ptyp_constr ~loc (runtime_loc_ident ~loc name) args
+let runtime_field ~loc ~force_variance ~name ~getter ~setter ~fset =
+  pexp_construct ~loc
+    (runtime_loc_ident ~loc "Field")
+    (Some (pexp_record ~loc
+             [ runtime_loc_ident_path ~loc
+                 ["For_generated_code"; "force_variance"], force_variance
+             ; Located.lident ~loc "name", name
+             ; Located.lident ~loc "getter", getter
+             ; Located.lident ~loc "setter", setter
+             ; Located.lident ~loc "fset", fset
+             ] None))
+let runtime_read_field ~loc record field =
+  pexp_field ~loc record (runtime_loc_ident ~loc field)
+
 let perm ~loc private_ =
   match private_ with
   | Private -> [%type:  [< `Read ] ]
   | Public -> [%type:  [< `Read | `Set_and_create ] ]
 
 let field_t ~loc private_ tps =
-  let id =
-    match private_ with
-    | Private -> Longident.parse "Fieldslib.Field.readonly_t"
-    | Public -> Longident.parse "Fieldslib.Field.t"
-  in
-  ptyp_constr ~loc (Located.mk ~loc id) tps
+  runtime_typ ~loc
+    (match private_ with
+    | Private -> "readonly_t"
+    | Public -> "t")
+    tps
 
 let check_at_least_one_record ~loc rec_flag tds =
   if rec_flag = Nonrecursive then
@@ -267,9 +293,7 @@ module Gen_sig = struct
     let perm = perm ~loc private_ in
     let t =
       [%type:
-        [%t ptyp_constr ~loc (Located.mk ~loc (Longident.parse "Fieldslib.Field.user"))
-            [perm;record;fresh_variable]
-        ]
+        [%t runtime_typ ~loc "user" [perm;record;fresh_variable] ]
         -> [%t fresh_variable] list
       ]
     in
@@ -416,17 +440,14 @@ module Gen_struct = struct
           | Public -> [%expr fun _r__ v__ -> [%e e] ]
         in
         let perm = perm ~loc private_ in
-        let annot =
-          [%type: ([%t perm], _, [%t field_ty]) Fieldslib.Field.t_with_perm]
-        in
+        let annot = runtime_typ ~loc "t_with_perm" [ perm; [%type: _]; field_ty ] in
         let body =
-          [%expr
-              Fieldslib.Field.Field { Fieldslib.Field.For_generated_code.
-                force_variance = (fun (_ : [%t perm]) -> ());
-                name = [%e A.exp_string ~loc name];
-                getter = [%e A.exp_name ~loc name];
-                setter = [%e setter_field];
-                fset = [%e fset];}]
+          runtime_field ~loc
+            ~force_variance:[%expr (fun (_ : [%t perm]) -> ())]
+            ~name:(A.exp_string ~loc name)
+            ~getter:(A.exp_name ~loc name)
+            ~setter:setter_field
+            ~fset
         in
         A.str_item ~loc name (pexp_constraint ~loc body annot)
       in
@@ -655,7 +676,8 @@ module Gen_struct = struct
   let map_poly ~loc labdecs =
     let names = Inspect.field_names labdecs in
     let fold name acc =
-      [%expr record__.Fieldslib.Field.f [%e A.exp_name ~loc name] :: [%e acc] ]
+      let f = runtime_read_field ~loc [%expr record__] "f" in
+      [%expr [%e f] [%e A.exp_name ~loc name] :: [%e acc] ]
     in
     let body = List.fold_right names ~init:[%expr []] ~f:fold in
     A.str_item ~loc "map_poly" (pexp_fun ~loc Nolabel None [%pat? record__] body)

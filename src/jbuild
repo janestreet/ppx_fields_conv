@@ -3,5 +3,5 @@
   (public_name ppx_fields_conv)
   (public_release ((kind ppx_type_conv_plugin)))
   (wrapped false)
-  (libraries (ocamlcommon ppx_core ppx_type_conv))
+  (libraries (ocamlcommon ppx_core ppx_type_conv ppx_inside_base))
   (preprocess ((metaquot All)))))

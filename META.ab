@@ -1,6 +1,6 @@
 version = "$(pkg_version)"
 description = "Generation of accessor and iteration functions for ocaml records"
-requires = "compiler-libs.common ppx_core ppx_type_conv"
+requires = "compiler-libs.common ppx_core ppx_driver.inside-base ppx_type_conv"
 requires(-ppx_driver)        += "fieldslib"
 requires(ppx_driver,toploop) += "fieldslib"
 archive(ppx_driver, byte  ) = "ppx_fields_conv.cma"

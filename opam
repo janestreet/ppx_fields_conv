@@ -16,6 +16,7 @@ depends: [
   "fieldslib"
   "js-build-tools" {build}
   "ppx_core"
+  "ppx_driver"
   "ppx_tools"      {>= "0.99.3"}
   "ppx_type_conv"
 ]
