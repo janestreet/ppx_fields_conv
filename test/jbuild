@@ -1,7 +1,7 @@
 (library
  ((name fieldslib_test)
   (libraries (fieldslib))
-  (preprocess (((pps (pa_fields_conv ppx_inline_test)) All)))))
+  (preprocess (pps (ppx_fields_conv ppx_inline_test)))))
 
 (rule
  ((targets (example_from_doc.ml))

@@ -1,7 +1,7 @@
 (executables
  ((names (test))
   (libraries (fieldslib))
-  (preprocess (((pps (pa_type_conv pa_fields_conv)) All)))))
+  (preprocess (pps (ppx_type_conv ppx_fields_conv)))))
 
 (alias ((name DEFAULT)
         (deps (test.ml.pp test.mli.pp))))
