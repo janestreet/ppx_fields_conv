@@ -5,13 +5,8 @@
 
 
 open Printf
-open StdLabels
-open Ppx_core.Std
-open Asttypes
-open Parsetree
+open Ppx_core
 open Ast_builder.Default
-
-[@@@metaloc loc]
 
 module Type_conv = Ppx_type_conv.Std.Type_conv
 
@@ -21,13 +16,13 @@ module A = struct (* Additional AST construction helpers *)
     pexp_constant ~loc (Pconst_string (s,None))
 
   let pat_name : (loc:Location.t -> string -> pattern) = fun ~loc name ->
-    ppat_var ~loc (Location.mkloc name loc)
+    ppat_var ~loc (Loc.make name ~loc)
 
   let exp_name : (loc:Location.t -> string -> expression) = fun ~loc name ->
-    pexp_ident ~loc (Location.mkloc (Longident.Lident name) loc)
+    pexp_ident ~loc (Loc.make (Longident.Lident name) ~loc)
 
   let lid_name : (loc:Location.t -> string -> Longident.t loc) = fun ~loc name ->
-    Location.mkloc (Longident.Lident name) loc
+    Loc.make (Longident.Lident name) ~loc
 
   let exp_true ~loc =
     pexp_construct ~loc (Located.mk ~loc (Longident.Lident "true")) None
@@ -94,9 +89,11 @@ let field_t ~loc private_ tps =
   ptyp_constr ~loc (Located.mk ~loc id) tps
 
 let check_at_least_one_record ~loc rec_flag tds =
-  if rec_flag = Nonrecursive then
-    Location.raise_errorf ~loc
-      "nonrec is not compatible with the `fields' preprocessor";
+  (match rec_flag with
+   | Nonrecursive ->
+     Location.raise_errorf ~loc
+       "nonrec is not compatible with the `fields' preprocessor"
+   | _ -> ());
   let is_record td =
     match td.ptype_kind with
     | Ptype_record _ -> true
@@ -125,7 +122,7 @@ module Gen_sig = struct
 
   let create_fun ~ty_name ~tps ~loc labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
-    let acc i = ptyp_var ~loc ("acc__" ^ string_of_int i) in
+    let acc i = ptyp_var ~loc ("acc__" ^ Int.to_string i) in
     let f i = field_arg ~loc ~private_:Public ~record (fun ~field ~ty ->
       let create_f = [%type:  'input__ -> ( [%t ty] ) ] in
       [%type:  [%t field] -> [%t acc i] -> ([%t create_f] * [%t acc (i + 1)]) ]
@@ -151,7 +148,7 @@ module Gen_sig = struct
   let fold_fun ~private_ ~ty_name ~tps ~loc labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
     let acc i =
-      ptyp_var ~loc ("acc__" ^ string_of_int i)
+      ptyp_var ~loc ("acc__" ^ Int.to_string i)
     in
     let f i arg : (arg_label * core_type) =
       field_arg ~loc ~private_ ~record (fun ~field ~ty:_ ->
@@ -167,7 +164,7 @@ module Gen_sig = struct
   let direct_fold_fun ~private_ ~ty_name ~tps ~loc labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
     let acc i =
-      ptyp_var ~loc ("acc__" ^ string_of_int i)
+      ptyp_var ~loc ("acc__" ^ Int.to_string i)
     in
     let f i arg =
       field_arg ~loc ~private_ ~record (fun ~field ~ty:field_ty ->
@@ -257,7 +254,7 @@ module Gen_sig = struct
     let fresh_variable =
       let rec loop i =
         let ret = sprintf "x%i" i in
-        if List.mem ret ~set:tps_names then
+        if List.mem tps_names ret then
           loop (i+1)
         else
           ret
@@ -310,7 +307,7 @@ module Gen_sig = struct
     in
     let create_fun = create_fun ~ty_name ~tps ~loc labdecs in
     let simple_create_fun = simple_create_fun ~ty_name ~tps ~loc labdecs in
-    let fields_module = if ty_name = "t" then "Fields" else "Fields_of_" ^ ty_name in
+    let fields_module = if String.equal ty_name "t" then "Fields" else "Fields_of_" ^ ty_name in
     let iter = iter_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let fold = fold_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let map = map_fun ~ty_name ~tps ~loc labdecs in
@@ -432,7 +429,7 @@ module Gen_struct = struct
       in
       getter::setter, field
     in
-    let xss,ys = List.split (List.rev (List.map labdecs ~f:conv_field)) in
+    let xss,ys = List.unzip (List.rev (List.map labdecs ~f:conv_field)) in
     List.concat xss, ys
 
   let label_arg ?label ~loc name =
@@ -578,8 +575,8 @@ module Gen_struct = struct
            : unit)
       ] in
     let body =
-      List.fold_left (List.tl names)
-        ~init:(iter_field (List.hd names))
+      List.fold_left (List.tl_exn names)
+        ~init:(iter_field (List.hd_exn names))
         ~f:(fun acc n -> [%expr ( [%e acc] ; [%e iter_field n] ) ]) in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let lambda = Create.lambda ~loc (patterns) body in
@@ -595,8 +592,8 @@ module Gen_struct = struct
       ]
     in
     let body =
-      List.fold_left (List.tl names)
-        ~init:(iter_field (List.hd names))
+      List.fold_left (List.tl_exn names)
+        ~init:(iter_field (List.hd_exn names))
         ~f:(fun acc n -> [%expr ( [%e acc] ; [%e iter_field n] ) ]) in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
@@ -699,7 +696,7 @@ module Gen_struct = struct
     let simple_create = simple_creation_fun ~loc record_name labdecs in
     let names = List.map (Inspect.field_names labdecs) ~f:(A.exp_string ~loc) in
     let fields_module =
-      if record_name = "t" then "Fields" else "Fields_of_" ^ record_name
+      if String.equal record_name "t" then "Fields" else "Fields_of_" ^ record_name
     in
     let iter           = iter_fun ~loc labdecs in
     let fold           = fold_fun ~loc labdecs in

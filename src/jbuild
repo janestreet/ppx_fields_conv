@@ -3,5 +3,5 @@
   (public_name ppx_fields_conv)
   (kind ppx_type_conv_plugin)
   (ppx_runtime_libraries (fieldslib))
-  (libraries (compiler-libs.common ppx_core ppx_type_conv))
-  (preprocess metaquot)))
+  (libraries (ppx_core ppx_type_conv))
+  (preprocess (pps (ppx_metaquot)))))

@@ -12,8 +12,9 @@ depends: [
   "fieldslib"
   "jbuilder"
   "ppx_core"
+  "ppx_driver"
+  "ppx_metaquot"
   "ppx_type_conv"
-  "ppx_tools"     {>= "0.99.3"}
 ]
 available: [ ocaml-version >= "4.03.0" ]
 descr: "
