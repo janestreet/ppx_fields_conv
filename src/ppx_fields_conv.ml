@@ -254,7 +254,7 @@ module Gen_sig = struct
     let fresh_variable =
       let rec loop i =
         let ret = sprintf "x%i" i in
-        if List.mem tps_names ret then
+        if List.mem ~equal:String.equal tps_names ret then
           loop (i+1)
         else
           ret
