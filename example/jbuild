@@ -5,3 +5,5 @@
 
 (alias ((name DEFAULT)
         (deps (test.ml.pp test.mli.pp))))
+
+(jbuild_version jane_street)

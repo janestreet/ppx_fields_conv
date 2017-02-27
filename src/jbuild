@@ -5,3 +5,5 @@
   (ppx_runtime_libraries (fieldslib))
   (libraries (ppx_core ppx_type_conv))
   (preprocess (pps (ppx_metaquot)))))
+
+(jbuild_version jane_street)

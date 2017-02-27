@@ -11,3 +11,5 @@
 (toplevel_expect_tests
  ((libraries (fieldslib ppx_fields_conv))
   (no_ppx_jane true)))
+
+(jbuild_version jane_street)
