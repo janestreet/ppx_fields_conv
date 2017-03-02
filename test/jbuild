@@ -8,8 +8,5 @@
   (deps (../README.md gen_test_from_doc.sh))
   (action "./gen_test_from_doc.sh ../README.md > ${@}")))
 
-(toplevel_expect_tests
- ((libraries (fieldslib ppx_fields_conv))
-  (no_ppx_jane true)))
 
 (jbuild_version jane_street)
