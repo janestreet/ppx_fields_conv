@@ -6,7 +6,7 @@
 (rule
  ((targets (example_from_doc.ml))
   (deps (../README.md gen_test_from_doc.sh))
-  (action "./gen_test_from_doc.sh ../README.md > ${@}")))
+  (action (bash "./gen_test_from_doc.sh ../README.md > ${@}"))))
 
 
 (jbuild_version jane_street)
