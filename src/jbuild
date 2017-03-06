@@ -1,9 +1,9 @@
 (library
  ((name ppx_fields_conv)
   (public_name ppx_fields_conv)
-  (kind ppx_type_conv_plugin)
+  (kind ppx_deriver)
   (ppx_runtime_libraries (fieldslib))
   (libraries (ppx_core ppx_type_conv))
-  (preprocess (pps (ppx_metaquot)))))
+  (preprocess (pps (ppx_metaquot ppx_driver.runner)))))
 
 (jbuild_version jane_street)

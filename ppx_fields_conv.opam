@@ -10,11 +10,12 @@ build: [
 ]
 depends: [
   "fieldslib"
-  "jbuilder"
+  "jbuilder"                {build}
   "ppx_core"
   "ppx_driver"
   "ppx_metaquot"
   "ppx_type_conv"
+  "ocaml-migrate-parsetree"
 ]
 available: [ ocaml-version >= "4.03.0" ]
 descr: "

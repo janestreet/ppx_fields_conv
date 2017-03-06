@@ -1,3 +1,8 @@
+---
+title: ppx_fields_conv
+parent: ../README.md
+---
+
 Generation of accessor and iteration functions for ocaml records.
 
 `ppx_fields_conv` is a ppx rewriter that can be used to define first
