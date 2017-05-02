@@ -752,9 +752,8 @@ module Gen_struct = struct
 
 end
 
-let () =
+let fields =
   Type_conv.add "fields"
     ~str_type_decl:(Type_conv.Generator.make Type_conv.Args.empty Gen_struct.generate)
     ~sig_type_decl:(Type_conv.Generator.make Type_conv.Args.empty Gen_sig.generate)
-  |> Type_conv.ignore
 ;;
