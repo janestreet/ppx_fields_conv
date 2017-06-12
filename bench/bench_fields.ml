@@ -1,18 +1,17 @@
-open! Core
-open Zero
-
 (* Current results:
    ┌───────────────────────────────────────────────────────────────────────────────────────┬──────────┬────────────┐
    │ Name                                                                                  │ Time/Run │ Percentage │
    ├───────────────────────────────────────────────────────────────────────────────────────┼──────────┼────────────┤
-   │ [bench_fields.ml:field_setting] manual field setting                                  │   2.61ns │     94.10% │
-   │ [bench_fields.ml:field_setting] Fields.Direct inlined                                 │   2.52ns │     91.04% │
-   │ [bench_fields.ml:field_setting] Fields.Direct NOT inlined                             │   2.77ns │    100.00% │
-   │ [bench_fields.ml:shorter_record_field_setting] manual field setting                   │   2.24ns │     80.69% │
-   │ [bench_fields.ml:shorter_record_field_setting] [Fields.Direct.set_all_mutable_fields] │   2.17ns │     78.09% │
+   │ [bench_fields.ml:field_setting] manual field setting                                  │   2.93ns │     92.92% │
+   │ [bench_fields.ml:field_setting] Fields.Direct inlined                                 │   2.71ns │     86.01% │
+   │ [bench_fields.ml:field_setting] Fields.Direct NOT inlined                             │   3.15ns │    100.00% │
+   │ [bench_fields.ml:shorter_record_field_setting] manual field setting                   │   2.68ns │     84.91% │
+   │ [bench_fields.ml:shorter_record_field_setting] [Fields.Direct.set_all_mutable_fields] │   2.53ns │     80.10% │
    └───────────────────────────────────────────────────────────────────────────────────────┴──────────┴────────────┘
 *)
 
+
+type a_or_b = | A | B
 
 let%bench_module "field_setting" =
   (module struct
@@ -20,12 +19,12 @@ let%bench_module "field_setting" =
     type t =
       { mutable a : int
       ; b : int
-      ; mutable c : Immediate.Int.Option.t
+      ; mutable c : a_or_b
       ; mutable d : int
       ; mutable e : int
       ; mutable f : int
       ; mutable g : int
-      } [@@deriving fields, sexp]
+      } [@@deriving fields]
 
     let set_manual t ~a ~c ~d ~e ~f ~g =
       t.a <- a;
@@ -47,7 +46,7 @@ let%bench_module "field_setting" =
     let init () =
       { a = 0
       ; b = 0
-      ; c = Immediate.Int.Option.none
+      ; c = A
       ; d = 0
       ; e = 0
       ; f = 0
@@ -59,7 +58,7 @@ let%bench_module "field_setting" =
       (fun () ->
          set_manual t
            ~a:1234567
-           ~c:(Immediate.Int.Option.some 1000000)
+           ~c:B
            ~d:1000
            ~e:99999
            ~f:42
@@ -71,7 +70,7 @@ let%bench_module "field_setting" =
       (fun () ->
          set_via_fields t
            ~a:1234567
-           ~c:(Immediate.Int.Option.some 1000000)
+           ~c:B
            ~d:1000
            ~e:99999
            ~f:42
@@ -83,7 +82,7 @@ let%bench_module "field_setting" =
       (fun () ->
          set_via_fields_not_inlined t
            ~a:1234567
-           ~c:(Immediate.Int.Option.some 1000000)
+           ~c:B
            ~d:1000
            ~e:99999
            ~f:42
@@ -97,12 +96,12 @@ let%bench_module "shorter_record_field_setting" =
     type t =
       { mutable a : int
       ; b : int
-      ; mutable c : Immediate.Int.Option.t
+      ; mutable c : a_or_b
       ; mutable d : int
       ; e : int
       ; f : int
       ; g : int
-      } [@@deriving fields, sexp]
+      } [@@deriving fields]
 
     let set_manual t ~a ~c ~d =
       t.a <- a;
@@ -117,7 +116,7 @@ let%bench_module "shorter_record_field_setting" =
     let init () =
       { a = 0
       ; b = 0
-      ; c = Immediate.Int.Option.none
+      ; c = B
       ; d = 0
       ; e = 0
       ; f = 0
@@ -129,7 +128,7 @@ let%bench_module "shorter_record_field_setting" =
       (fun () ->
          set_manual t
            ~a:1234567
-           ~c:(Immediate.Int.Option.some 1000000)
+           ~c:B
            ~d:1000
       )
     ;;
@@ -139,7 +138,7 @@ let%bench_module "shorter_record_field_setting" =
       (fun () ->
          set_via_fields t
            ~a:1234567
-           ~c:(Immediate.Int.Option.some 1000000)
+           ~c:B
            ~d:1000
       )
     ;;
