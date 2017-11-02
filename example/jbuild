@@ -1,5 +1,6 @@
 (executables
  ((names (test))
+  (flags (:standard -safe-string))
   (libraries (fieldslib))
   (preprocess (pps (ppx_type_conv ppx_fields_conv ppx_driver.runner)))))
 
