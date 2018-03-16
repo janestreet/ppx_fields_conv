@@ -4,8 +4,8 @@
   (kind ppx_deriver)
   (ppx_runtime_libraries (fieldslib))
   (flags (:standard -safe-string))
-  (libraries (ppx_core ppx_type_conv))
-  (preprocess (pps (ppx_metaquot ppx_driver.runner)))))
+  (libraries (base ppxlib))
+  (preprocess (pps (ppxlib.metaquot ppxlib.runner)))))
 
 
 (jbuild_version 1)

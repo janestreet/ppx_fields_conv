@@ -4,11 +4,10 @@
    are moving more and more to code that doesn't have them in scope. *)
 
 
+open Base
 open Printf
-open Ppx_core
+open Ppxlib
 open Ast_builder.Default
-
-module Type_conv = Ppx_type_conv.Std.Type_conv
 
 module A = struct (* Additional AST construction helpers *)
 
@@ -47,11 +46,6 @@ module A = struct (* Additional AST construction helpers *)
       psig_module ~loc (module_declaration ~loc ~name:(Located.mk ~loc name)
                           ~type_:(pmty_signature ~loc signature))
 
-end
-
-module List = struct
-  include List
-  let concat_map xs ~f = concat (map xs ~f)
 end
 
 module Create = struct
@@ -753,7 +747,7 @@ module Gen_struct = struct
 end
 
 let fields =
-  Type_conv.add "fields"
-    ~str_type_decl:(Type_conv.Generator.make Type_conv.Args.empty Gen_struct.generate)
-    ~sig_type_decl:(Type_conv.Generator.make Type_conv.Args.empty Gen_sig.generate)
+  Deriving.add "fields"
+    ~str_type_decl:(Deriving.Generator.make Deriving.Args.empty Gen_struct.generate)
+    ~sig_type_decl:(Deriving.Generator.make Deriving.Args.empty Gen_sig.generate)
 ;;
