@@ -104,6 +104,15 @@ end = struct
   let foo = "a"
 end
 
+module Wildcard : sig
+  type _ t = { x : int; y : string } [@@deriving fields]
+end = struct
+  type _ t = { x : int; y : string } [@@deriving fields]
+
+  let _ = x
+  let _ = y
+end
+
 let%test_module "set_all_mutable_fields" = (module struct
   module M : sig
     type 'a t = { mutable a : int; b : string; mutable c : 'a }

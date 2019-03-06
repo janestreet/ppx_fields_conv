@@ -363,6 +363,7 @@ module Gen_sig = struct
     | _ -> []
 
   let generate ~loc ~path:_ (rec_flag, tds) =
+    let tds = List.map tds ~f:name_type_params_in_td in
     check_at_least_one_record ~loc rec_flag tds;
     List.concat_map tds ~f:fields_of_td
 
@@ -741,6 +742,7 @@ module Gen_struct = struct
     | _ -> []
 
   let generate ~loc ~path:_ (rec_flag, tds) =
+    let tds = List.map tds ~f:name_type_params_in_td in
     check_at_least_one_record ~loc rec_flag tds;
     List.concat_map tds ~f:fields_of_td
 
