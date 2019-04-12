@@ -90,9 +90,9 @@ end
 let _ = Private.Fields.fold
 let _ = Private.Fields.a
 let _ = Fieldslib.Field.name Private.Fields.a
-let _ = Fieldslib.Field.get Private.Fields.a
+let (_ : Private.t -> int) = Fieldslib.Field.get Private.Fields.a
 let _ = Private.Fields.map_poly
-  { Fieldslib.Field.f = (fun f -> let _ = Fieldslib.Field.get f in ())}
+  { Fieldslib.Field.f = (fun f -> let (_ : Private.t -> _) = Fieldslib.Field.get f in ())}
 
 module Warnings : sig
   (* could generate an unused warning but for crazy reasons, only
