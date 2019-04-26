@@ -657,7 +657,7 @@ module Gen_struct = struct
     | [] -> [%expr ()]
     | x::xs -> List.fold_left ~init:x xs ~f:(fun x y -> pexp_sequence ~loc y x)
 
-  let set_all_mutable_fields ~loc labdecs =
+  let set_all_mutable_fields ~loc labdecs : structure_item =
     let record_name = "_record__" in
     let body =
       let exprs =
@@ -682,8 +682,10 @@ module Gen_struct = struct
           let field_name = labdec.pld_name.txt in
           pexp_fun ~loc (Labelled field_name) None (A.pat_name ~loc field_name) acc)
     in
-    A.str_item ~loc "set_all_mutable_fields" (
-      pexp_fun ~loc Nolabel None (A.pat_name ~loc record_name) function_)
+    let body =
+      pexp_fun ~loc Nolabel None (A.pat_name ~loc record_name) function_
+    in
+    [%stri let[@inline always] set_all_mutable_fields = [%e body]]
 
   let record ~private_ ~record_name ~loc (labdecs:label_declaration list) : structure =
     let getter_and_setters, fields = gen_fields ~private_ ~loc labdecs in
