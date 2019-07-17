@@ -672,7 +672,16 @@ module Gen_struct = struct
               (A.exp_name ~loc field_name)
             :: acc)
       in
-      sequence_ ~loc exprs
+      (* As of 2019-06-25, flambda generates extra mov instructions when calling
+         [Fields.Direct.set_all_mutable_fields] on a top-level record.
+         [Caml.Sys.opaque_identity] causes flambda to generate the correct assembly here.
+      *)
+      [%expr
+        let [%p A.pat_name ~loc record_name] =
+          Fieldslib.Field.For_generated_code.opaque_identity [%e A.exp_name ~loc record_name]
+        in
+        [%e sequence_ ~loc exprs]
+      ]
     in
     let function_ =
       List.fold_right labdecs ~init:body ~f:(fun labdec acc ->
