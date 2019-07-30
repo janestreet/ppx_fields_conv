@@ -39,7 +39,7 @@ let%bench_module "field_setting" =
       Fields.Direct.set_all_mutable_fields t ~a ~c ~d ~e ~f ~g
     ;;
 
-    let [@inline never] set_via_fields_not_inlined t ~a ~c ~d ~e ~f ~g =
+    let [@cold] set_via_fields_not_inlined t ~a ~c ~d ~e ~f ~g =
       Fields.Direct.set_all_mutable_fields t ~a ~c ~d ~e ~f ~g
     ;;
 
