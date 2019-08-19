@@ -16,6 +16,7 @@ Line _, characters *: (glob)
 Error: * (glob)
        * (glob)
        * (glob)
+       * (glob)
        The first variant type does not allow tag(s) `Set_and_create
 |}]
 
@@ -23,6 +24,7 @@ let _ = Fieldslib.Field.setter Fields.a
 [%%expect{|
 Line _, characters *: (glob)
 Error: * (glob)
+       * (glob)
        * (glob)
        * (glob)
        The first variant type does not allow tag(s) `Set_and_create
