@@ -9,6 +9,29 @@ open Printf
 open Ppxlib
 open Ast_builder.Default
 
+
+let check_no_collision =
+  let always =
+    [ "make_creator"; "create"; "fold"; "iter"; "to_list"; "map"; "map_poly"
+    ; "for_all"; "exists"; "names" ]
+  in
+  fun (lbls : label_declaration list) ->
+    let generated_funs =
+      let extra_forbidden_names =
+        List.filter_map lbls ~f:(function
+          | {pld_mutable = Mutable; pld_name; _} -> Some ("set_" ^ pld_name.txt)
+          | _ -> None
+        )
+      in
+      "set_all_mutable_fields" :: extra_forbidden_names @ always
+    in
+    List.iter lbls ~f:(fun {pld_name; pld_loc; _} ->
+      if List.mem generated_funs pld_name.txt ~equal:String.equal then
+        Location.raise_errorf ~loc:pld_loc
+          "ppx_fields_conv: field name %S conflicts with one of the generated functions"
+          pld_name.txt
+    )
+
 module A = struct (* Additional AST construction helpers *)
 
   let exp_string : (loc:Location.t -> string -> expression) = fun ~loc s ->
@@ -359,7 +382,9 @@ module Gen_sig = struct
          ptype_kind; _ } = td in
     let tps = List.map ptype_params ~f:(fun (tp, _variance) -> tp) in
     match ptype_kind with
-    | Ptype_record labdecs -> record ~private_ ~ty_name ~tps ~loc labdecs
+    | Ptype_record labdecs ->
+      check_no_collision labdecs;
+      record ~private_ ~ty_name ~tps ~loc labdecs
     | _ -> []
 
   let generate ~loc ~path:_ (rec_flag, tds) =
@@ -749,7 +774,9 @@ module Gen_struct = struct
          ptype_private=private_;
          ptype_kind; _ } = td in
     match ptype_kind with
-    | Ptype_record labdecs -> record ~private_ ~record_name ~loc labdecs
+    | Ptype_record labdecs ->
+      check_no_collision labdecs;
+      record ~private_ ~record_name ~loc labdecs
     | _ -> []
 
   let generate ~loc ~path:_ (rec_flag, tds) =
