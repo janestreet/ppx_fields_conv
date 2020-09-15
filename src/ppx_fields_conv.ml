@@ -767,7 +767,13 @@ module Gen_struct = struct
             | Private -> []
             | Public -> [direct_map; set_all_mutable_fields]
             end;
-           ])]])]
+          ])]])
+    (* Silence unused module warning for Fields and Field.Direct. Just putting
+       [@@ocaml.warning "-60"] on Fields doesn't work, as that silence warnings for
+       Fields.Direct but not for Fields itself. Use [module _ = Fields.Direct] when we
+       stop supporting ocaml < 4.10. *)
+    ; [%stri let _ = [%e evar ~loc (fields_module ^ ".Direct.iter")]]
+    ]
 
   let fields_of_td (td:type_declaration) : structure =
     let {ptype_name={txt=record_name;loc};

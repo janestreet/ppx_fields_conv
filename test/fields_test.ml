@@ -149,3 +149,10 @@ module M
       ~b:(fun f _ -> f ~b:"foo")
       ~c:(fun f _ -> f ~c:true)
 end
+
+(* We expect no unused value, unused type, unused module warnings, as only a part of the
+   generated code is used in normal circumstances. *)
+module Unused_warnings : sig end = struct
+  [@@@ocaml.warning "+60"]
+  type t = { a : int; b : int } [@@deriving fields]
+end
