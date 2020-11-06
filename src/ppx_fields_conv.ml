@@ -132,7 +132,7 @@ module Gen_sig = struct
   let label_arg name ty = (Labelled name,ty)
 
   let field_arg ~loc ~private_ ~record
-      (f: field:core_type -> ty:core_type -> 'a) labdec : arg_label * 'a =
+        (f: field:core_type -> ty:core_type -> 'a) labdec : arg_label * 'a =
     let {pld_name=name; pld_type=ty; _} = labdec in
     label_arg name.txt (
       f ~field:(field_t ~loc private_ [record; ty]) ~ty)
@@ -147,8 +147,8 @@ module Gen_sig = struct
     let types = List.mapi labdecs ~f in
     let create_record_f = [%type:  'input__ -> ([%t record]) ] in
     let t = Create.lambda_sig ~loc
-      (types @ [ Nolabel, acc 0 ])
-      ([%type:  ( [%t create_record_f] * [%t acc (List.length labdecs)]) ])
+              (types @ [ Nolabel, acc 0 ])
+              ([%type:  ( [%t create_record_f] * [%t acc (List.length labdecs)]) ])
     in
     A.sig_item ~loc "make_creator" t
 
@@ -174,8 +174,8 @@ module Gen_sig = struct
     let types = List.mapi labdecs ~f in
     let init_ty = label_arg "init" (acc 0) in
     let t = Create.lambda_sig ~loc
-      (init_ty :: types)
-      (acc (List.length labdecs)) in
+              (init_ty :: types)
+              (acc (List.length labdecs)) in
     A.sig_item ~loc "fold" t
 
   let direct_fold_fun ~private_ ~ty_name ~tps ~loc labdecs =
@@ -186,14 +186,14 @@ module Gen_sig = struct
     let f i arg =
       field_arg ~loc ~private_ ~record (fun ~field ~ty:field_ty ->
         [%type:  [%t acc i] -> [%t field] -> [%t record] -> [%t field_ty]
-        -> [%t acc (i + 1)] ]) arg
+          -> [%t acc (i + 1)] ]) arg
     in
     let types = List.mapi labdecs ~f in
     let init_ty = label_arg "init" (acc 0) in
     let t =
       Create.lambda_sig ~loc ((Nolabel,record) :: init_ty :: types) (acc (List.length labdecs))
     in
-      A.sig_item ~loc "fold" t
+    A.sig_item ~loc "fold" t
 
   let bool_fun fun_name ~private_ ~ty_name ~tps ~loc labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
@@ -282,7 +282,7 @@ module Gen_sig = struct
     let t =
       [%type:
         [%t ptyp_constr ~loc (Located.mk ~loc (Longident.parse "Fieldslib.Field.user"))
-            [perm;record;fresh_variable]
+              [perm;record;fresh_variable]
         ]
         -> [%t fresh_variable] list
       ]
@@ -318,7 +318,7 @@ module Gen_sig = struct
         | Mutable, Private -> [getter]
         | Mutable, Public ->
           let setter = A.sig_item ~loc ("set_" ^ name)
-            [%type: [%t record_ty] -> [%t ty] -> unit]
+                         [%type: [%t record_ty] -> [%t ty] -> unit]
           in
           [getter;setter]))
     in
@@ -355,10 +355,10 @@ module Gen_sig = struct
              records. *)
           | Private -> []
           | Public -> [
-            create_fun;
-            simple_create_fun;
-            map;
-          ]
+              create_fun;
+              simple_create_fun;
+              map;
+            ]
           end;
           [iter; and_f; or_f; to_list; map_poly;
            A.sig_mod ~loc "Direct" (List.concat [
@@ -370,9 +370,9 @@ module Gen_sig = struct
                direct_to_list;
              ];
              begin match private_ with
-            | Private -> []
-            | Public -> [direct_map; set_all_mutable_fields]
-            end;
+             | Private -> []
+             | Public -> [direct_map; set_all_mutable_fields]
+             end;
            ])]])]
 
   let fields_of_td (td:type_declaration) : signature =
@@ -414,14 +414,14 @@ module Gen_struct = struct
         | Mutable, Private ->
           [], [%expr Some (fun _ _ -> failwith "invalid call to a setter of a private type")]
         | Mutable, Public ->
-            let setter =
-              A.str_item ~loc ("set_" ^ name)
-                [%expr fun _r__ v__ ->
-                  [%e pexp_setfield ~loc
+          let setter =
+            A.str_item ~loc ("set_" ^ name)
+              [%expr fun _r__ v__ ->
+                [%e pexp_setfield ~loc
                       [%expr _r__] (A.lid_name ~loc name) [%expr v__] ]]
-            in
-            let setter_field = [%expr Some [%e A.exp_name ~loc ("set_" ^ name)]] in
-            [setter], setter_field
+          in
+          let setter_field = [%expr Some [%e A.exp_name ~loc ("set_" ^ name)]] in
+          [setter], setter_field
         | Immutable, _ -> [], [%expr None ]
       in
       let field =
@@ -438,12 +438,12 @@ module Gen_struct = struct
         in
         let body =
           [%expr
-              Fieldslib.Field.Field { Fieldslib.Field.For_generated_code.
-                force_variance = (fun (_ : [%t perm]) -> ());
-                name = [%e A.exp_string ~loc name];
-                getter = [%e A.exp_name ~loc name];
-                setter = [%e setter_field];
-                fset = [%e fset];}]
+            Fieldslib.Field.Field { Fieldslib.Field.For_generated_code.
+                                    force_variance = (fun (_ : [%t perm]) -> ());
+                                    name = [%e A.exp_string ~loc name];
+                                    getter = [%e A.exp_name ~loc name];
+                                    setter = [%e setter_field];
+                                    fset = [%e fset];}]
         in
         A.str_item ~loc name (pexp_constraint ~loc body annot)
       in
@@ -467,7 +467,7 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs  in
     let f =
       let body_record = Create.record ~loc
-        (List.map names ~f:(fun n -> (n, A.exp_name ~loc n))) in
+                          (List.map names ~f:(fun n -> (n, A.exp_name ~loc n))) in
       let body =
         List.fold_right names
           ~init: [%expr ( [%e body_record] ) ]
@@ -511,7 +511,7 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-          [%e acc_expr] [%e A.exp_name ~loc field_name] ]
+               [%e acc_expr] [%e A.exp_name ~loc field_name] ]
     in
     let body = List.fold_left names ~init:[%expr init__ ] ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
@@ -523,10 +523,10 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-        [%e acc_expr]
-        [%e A.exp_name ~loc field_name]
-        record__
-        [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+               [%e acc_expr]
+               [%e A.exp_name ~loc field_name]
+               record__
+               [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
       ]
     in
     let body = List.fold_left names ~init:[%expr init__ ] ~f:field_fold in
@@ -539,7 +539,7 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e acc_expr] && [%e A.exp_name ~loc (field_name ^ "_fun__")]
-          [%e A.exp_name ~loc field_name] ]
+                                [%e A.exp_name ~loc field_name] ]
     in
     let body = List.fold_left names ~init:(A.exp_true ~loc) ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
@@ -550,9 +550,9 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e acc_expr] && [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-        [%e A.exp_name ~loc field_name]
-        record__
-        [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+                                [%e A.exp_name ~loc field_name]
+                                record__
+                                [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
       ]
     in
     let body = List.fold_left names ~init:(A.exp_true ~loc) ~f:field_fold in
@@ -564,7 +564,7 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e acc_expr] || [%e A.exp_name ~loc (field_name ^ "_fun__")]
-          [%e A.exp_name ~loc field_name] ] in
+                                [%e A.exp_name ~loc field_name] ] in
     let body =
       List.fold_left names ~init:[%expr false ] ~f:field_fold in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
@@ -575,9 +575,9 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let field_fold acc_expr field_name =
       [%expr [%e acc_expr] || [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-        [%e A.exp_name ~loc field_name]
-        record__
-        [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+                                [%e A.exp_name ~loc field_name]
+                                record__
+                                [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
       ]
     in
     let body =
@@ -592,7 +592,7 @@ module Gen_struct = struct
       [%expr
         ([%e A.exp_name ~loc (field_name ^ "_fun__") ]
            [%e A.exp_name ~loc field_name]
-           : unit)
+         : unit)
       ] in
     let body =
       List.fold_left (List.tl_exn names)
@@ -606,9 +606,9 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let iter_field field_name =
       [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-        [%e A.exp_name ~loc field_name]
-        record__
-        [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+               [%e A.exp_name ~loc field_name]
+               record__
+               [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
       ]
     in
     let body =
@@ -623,7 +623,7 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let body = Create.record ~loc (List.map names ~f:(fun field_name ->
       let e = [%expr [%e A.exp_name ~loc (field_name ^ "_fun__")]
-                  [%e A.exp_name ~loc field_name] ]
+                       [%e A.exp_name ~loc field_name] ]
       in (field_name, e )))
     in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
@@ -634,10 +634,10 @@ module Gen_struct = struct
     let names = Inspect.field_names labdecs in
     let body = Create.record ~loc (List.map names ~f:(fun field_name ->
       let e = [%expr [%e A.exp_name ~loc (field_name ^ "_fun__")]
-                  [%e A.exp_name ~loc field_name]
-                  record__
-                  [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
-              ]
+                       [%e A.exp_name ~loc field_name]
+                       record__
+                       [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+      ]
       in (field_name, e )))
     in
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
@@ -649,7 +649,7 @@ module Gen_struct = struct
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let fold field_name tail =
       [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-          [%e A.exp_name ~loc field_name] :: [%e tail] ]
+               [%e A.exp_name ~loc field_name] :: [%e tail] ]
     in
     let body = List.fold_right names ~init:[%expr [ ] ] ~f:fold in
     let lambda = Create.lambda ~loc patterns body in
@@ -660,10 +660,10 @@ module Gen_struct = struct
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let fold field_name tail =
       [%expr [%e A.exp_name ~loc (field_name ^ "_fun__") ]
-          [%e A.exp_name ~loc field_name]
-          record__
-          [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
-          :: [%e tail] ]
+               [%e A.exp_name ~loc field_name]
+               record__
+               [%e pexp_field ~loc [%expr record__] (A.lid_name ~loc field_name)]
+             :: [%e tail] ]
     in
     let body = List.fold_right names ~init:[%expr [ ] ] ~f:fold in
     let lambda = Create.lambda ~loc ((Nolabel,[%pat? record__ ]) :: patterns) body in
@@ -756,18 +756,18 @@ module Gen_struct = struct
            andf; orf; to_list;
           ];
           [A.mod_ ~loc "Direct" (List.concat [
-            [
-              direct_iter;
-              direct_fold;
-              direct_andf;
-              direct_orf;
-              direct_to_list;
-            ];
-            begin match private_ with
-            | Private -> []
-            | Public -> [direct_map; set_all_mutable_fields]
-            end;
-          ])]])
+             [
+               direct_iter;
+               direct_fold;
+               direct_andf;
+               direct_orf;
+               direct_to_list;
+             ];
+             begin match private_ with
+             | Private -> []
+             | Public -> [direct_map; set_all_mutable_fields]
+             end;
+           ])]])
     (* Silence unused module warning for Fields and Field.Direct. Just putting
        [@@ocaml.warning "-60"] on Fields doesn't work, as that silence warnings for
        Fields.Direct but not for Fields itself. Use [module _ = Fields.Direct] when we
