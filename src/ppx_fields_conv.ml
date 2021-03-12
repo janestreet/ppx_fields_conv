@@ -35,7 +35,7 @@ let check_no_collision =
 module A = struct (* Additional AST construction helpers *)
 
   let exp_string : (loc:Location.t -> string -> expression) = fun ~loc s ->
-    pexp_constant ~loc (Pconst_string (s,None))
+    pexp_constant ~loc (Pconst_string (s,loc,None))
 
   let pat_name : (loc:Location.t -> string -> pattern) = fun ~loc name ->
     ppat_var ~loc (Loc.make name ~loc)
