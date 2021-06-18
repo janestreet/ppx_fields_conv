@@ -10,39 +10,36 @@
      generated_test.mli (see make_creator, for example)
 *)
 
+type ('a, 'b) t =
+  { dir : 'a * 'b
+  ; quantity : ('a, 'b) t
+  ; price : int * 'a
+  ; mutable cancelled : bool (*   symbol : string;   *)
+  }
+[@@deriving fields]
 
-
-type ('a,'b) t = {
-  dir : 'a * 'b;
-  quantity : ('a , 'b) t;
-  price : int * 'a;
-  mutable cancelled : bool;
-  (*   symbol : string;   *)
-} [@@deriving fields]
-
-type foo = {
-  a : [`Bar | `Baz of string];
-  b : int;
-} [@@deriving fields]
+type foo =
+  { a : [ `Bar | `Baz of string ]
+  ; b : int
+  }
+[@@deriving fields]
 
 module Private_in_mli : sig
-  type ('a,'b) t = private {
-    dir : 'a * 'b;
-    quantity : ('a , 'b) t;
-    price : int * 'a;
-    mutable cancelled : bool;
-    (*   symbol : string;   *)
-  } [@@deriving fields]
+  type ('a, 'b) t = private
+    { dir : 'a * 'b
+    ; quantity : ('a, 'b) t
+    ; price : int * 'a
+    ; mutable cancelled : bool (*   symbol : string;   *)
+    }
+  [@@deriving fields]
 end
 
 module Private_in_ml : sig
-  type ('a,'b) t = ('a,'b) Private_in_mli.t = private {
-    dir : 'a * 'b;
-    quantity : ('a , 'b) t;
-    price : int * 'a;
-    mutable cancelled : bool;
-    (*   symbol : string;   *)
-  } [@@deriving fields]
+  type ('a, 'b) t = ('a, 'b) Private_in_mli.t = private
+    { dir : 'a * 'b
+    ; quantity : ('a, 'b) t
+    ; price : int * 'a
+    ; mutable cancelled : bool (*   symbol : string;   *)
+    }
+  [@@deriving fields]
 end
-
-
