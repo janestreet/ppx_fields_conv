@@ -31,7 +31,7 @@ let check_no_collision =
           | { pld_mutable = Mutable; pld_name; _ } -> Some ("set_" ^ pld_name.txt)
           | _ -> None)
       in
-      "set_all_mutable_fields" :: extra_forbidden_names @ always
+      ("set_all_mutable_fields" :: extra_forbidden_names) @ always
     in
     List.iter lbls ~f:(fun { pld_name; pld_loc; _ } ->
       if List.mem generated_funs pld_name.txt ~equal:String.equal
@@ -257,7 +257,7 @@ module Gen_sig = struct
     let types = List.mapi labdecs ~f in
     let init_ty = label_arg "init" (acc 0) in
     let t =
-      Create.lambda_sig ~loc ((Nolabel, record) :: types @ [ init_ty ]) (acc numlabs)
+      Create.lambda_sig ~loc (((Nolabel, record) :: types) @ [ init_ty ]) (acc numlabs)
     in
     A.sig_item ~loc "fold_right" t
   ;;
@@ -702,7 +702,7 @@ module Gen_struct = struct
     let patterns = List.map names ~f:(label_arg_fun ~loc) in
     let init = label_arg ~label:"init" ~loc "init__" in
     let lambda =
-      Create.lambda ~loc ((Nolabel, [%pat? record__]) :: patterns @ [ init ]) body
+      Create.lambda ~loc (((Nolabel, [%pat? record__]) :: patterns) @ [ init ]) body
     in
     A.str_item ~loc "fold_right" lambda
   ;;

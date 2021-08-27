@@ -5,7 +5,7 @@ type t =
 [@@deriving_inline fields ~fold_right]
 
 include sig
-  [@@@ocaml.warning "-32"]
+  [@@@ocaml.warning "-32-60"]
 
   val y : t -> bool
   val set_y : t -> bool -> unit
