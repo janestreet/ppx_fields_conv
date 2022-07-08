@@ -91,7 +91,6 @@ end
 
 module Rec = struct
   type a = { something1 : b }
-
   and b = A of a [@@deriving fields]
 
   let _ = something1
@@ -99,7 +98,6 @@ end
 
 module Multiple_names = struct
   type a = { a : int }
-
   and b = { b : int } [@@deriving fields]
 
   let%test _ = b { b = 1 } = 1

@@ -135,8 +135,6 @@ include struct
       let _ = set_all_mutable_fields
     end
   end
-
-  let _ = Fields.Direct.iter
 end [@@ocaml.doc "@inline"]
 
 [@@@end]
