@@ -1,0 +1,166 @@
+(** This file tests the argument parsing/constructing functions from [Selectors]. *)
+
+open Base
+open Ppxlib
+open Ast_builder.Default
+module Selector = Ppx_fields_conv.Selector
+
+(** We define a ppx to simulate our argument-parsing.
+
+    {[
+      type t [@@deriving fields_clause ...<args>...]
+    ]}
+
+    produces
+
+    {[
+      let selectors = [ ...<selectors>... ]
+    ]}
+
+    where [<selectors>] are the selectors that [@@deriving fields] would use if given the
+    same [<args>.]
+*)
+
+let () =
+  let str_type_decl =
+    Selector.generator ~add_dependencies:false (fun ~ctxt _ selectors ->
+      let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+      let selectors_expr =
+        match selectors with
+        | Error error -> Location.Error.raise error
+        | Ok set ->
+          List.map (Set.to_list set) ~f:(Selector.to_expression ~loc) |> elist ~loc
+      in
+      [%str let (selectors : Selector.t list) = [%e selectors_expr]])
+  in
+  Deriving.add "fields_clause" ~str_type_decl |> Deriving.ignore
+;;
+
+[%%expect {|
+|}]
+
+(** We write an extension to test our argument-construction.
+
+    {[
+      expect := [ ...<selectors>... ]
+      ;;
+
+      [%%test_fields_clause]
+    ]}
+
+    produces
+
+    {[
+      expect := [ ...<selectors>... ]
+      ;;
+
+      type t [@@deriving fields_clause ...<args>...]
+      ;;
+
+      test "fields_clause ... <args> ..." selectors
+    ]}
+
+    This tests that the selectors list in [expect] round-trips through [[@@deriving
+    fields_clause]] to produce the same selectors at the end.
+*)
+
+let expect = ref []
+
+let test deriving actual =
+  let expect = List.sort !expect ~compare:Selector.compare in
+  if Poly.equal expect actual
+  then
+    Stdio.print_s
+      (Sexp.message
+         "Ok"
+         [ "deriving", String.sexp_of_t deriving
+         ; "selectors", List.sexp_of_t Selector.sexp_of_t actual
+         ])
+  else
+    Stdio.print_s
+      (Sexp.message
+         "Error"
+         [ "deriving", String.sexp_of_t deriving
+         ; "actual", List.sexp_of_t Selector.sexp_of_t actual
+         ; "expect", List.sexp_of_t Selector.sexp_of_t expect
+         ])
+;;
+
+let () =
+  let extension =
+    Extension.V3.declare_inline
+      "test_fields_clause"
+      Structure_item
+      Ast_pattern.(pstr nil)
+      (fun ~ctxt ->
+         let loc = Expansion_context.Extension.extension_point_loc ctxt in
+         let loc = { loc with loc_ghost = true } in
+         let fields = Selector.deriving_clause ~loc !expect |> Option.value_exn in
+         let fields_clause =
+           match fields with
+           | [%expr fields] -> [%expr fields_clause]
+           | { pexp_desc = Pexp_apply ([%expr fields], args); _ } ->
+             pexp_apply ~loc [%expr fields_clause] args
+           | _ -> assert false
+         in
+         let expr = estring ~loc (Pprintast.string_of_expression fields) in
+         [%str
+           type t [@@deriving [%e fields_clause]]
+
+           let () = test [%e expr] selectors])
+  in
+  Driver.register_transformation ~extensions:[ extension ] "test_fields_clause"
+;;
+
+[%%expect {|
+|}]
+
+let () = expect := [ Per_field Fields ]
+
+[%%test_fields_clause]
+
+[%%expect {|
+(Ok (deriving "fields ~fields") (selectors (~fields)))
+|}]
+
+let () = expect := [ Iterator Create ]
+
+[%%test_fields_clause]
+
+[%%expect
+  {|
+(Ok (deriving "fields ~iterators:create") (selectors (~iterators:create)))
+|}]
+
+let () = expect := [ Per_field Names; Direct_iterator Iter; Direct_iterator Fold_right ]
+
+[%%test_fields_clause]
+
+[%%expect
+  {|
+(Ok (deriving "fields ~names ~direct_iterators:(fold_right, iter)")
+ (selectors (~names ~direct_iterators:fold_right ~direct_iterators:iter)))
+|}]
+
+let () = expect := Selector.all
+
+[%%test_fields_clause]
+
+[%%expect
+  {|
+(Ok
+ (deriving
+   "fields ~getters ~setters ~names ~fields\
+  \n  ~iterators:(create, make_creator, exists, fold, fold_right, for_all, iter,\
+  \n               map, to_list, map_poly)\
+  \n  ~direct_iterators:(exists, fold, fold_right, for_all, iter, map, to_list,\
+  \n                      set_all_mutable_fields)")
+ (selectors
+  (~getters ~setters ~names ~fields ~iterators:create ~iterators:make_creator
+   ~iterators:exists ~iterators:fold ~iterators:fold_right ~iterators:for_all
+   ~iterators:iter ~iterators:map ~iterators:to_list ~iterators:map_poly
+   ~direct_iterators:exists ~direct_iterators:fold
+   ~direct_iterators:fold_right ~direct_iterators:for_all
+   ~direct_iterators:iter ~direct_iterators:map ~direct_iterators:to_list
+   ~direct_iterators:set_all_mutable_fields)))
+|}]

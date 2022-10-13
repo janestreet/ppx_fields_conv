@@ -8,6 +8,7 @@ open Base
 open Printf
 open Ppxlib
 open Ast_builder.Default
+module Selector = Selector
 
 let check_no_collision =
   let always =
@@ -133,6 +134,35 @@ let check_at_least_one_record ~loc rec_flag tds =
        | _ ->
          "'with fields' can only be applied on type definitions in which at least one \
           type definition is a record")
+;;
+
+let module_defn defns ~name ~loc ~make_module =
+  if List.is_empty defns then [] else [ make_module ~loc name defns ]
+;;
+
+let assemble ~loc ~selection ~fields_module ~make_module ~make_error alist =
+  let alist = List.filter alist ~f:(fun (selector, _) -> Set.mem selection selector) in
+  match List.is_empty alist with
+  | true ->
+    [ make_error
+        (Location.Error.createf ~loc "[@@deriving fields]: no definitions generated")
+    ]
+  | false ->
+    let inline, fields, direct =
+      List.partition3_map alist ~f:(fun (selector, defn) ->
+        match (selector : Selector.t) with
+        | Per_field (Getters | Setters) -> `Fst defn
+        | Per_field (Names | Fields) | Iterator _ -> `Snd defn
+        | Direct_iterator _ -> `Trd defn)
+    in
+    List.concat
+      [ inline
+      ; module_defn
+          ~loc
+          ~make_module
+          ~name:fields_module
+          (List.concat [ fields; module_defn ~loc ~make_module ~name:"Direct" direct ])
+      ]
 ;;
 
 module Gen_sig = struct
@@ -387,13 +417,7 @@ module Gen_sig = struct
     A.sig_item ~loc "set_all_mutable_fields" [%type: [%t record] -> [%t labels]]
   ;;
 
-  let record
-        ~private_
-        ~ty_name
-        ~tps
-        ~loc
-        ~include_fold_right
-        (labdecs : label_declaration list)
+  let record ~private_ ~ty_name ~tps ~loc ~selection (labdecs : label_declaration list)
     : signature
     =
     let fields =
@@ -401,7 +425,7 @@ module Gen_sig = struct
         let { pld_name = { txt = name; loc }; pld_type = ty; _ } = labdec in
         let record_ty = apply_type ~loc ~ty_name ~tps in
         let field = A.sig_item ~loc name (field_t ~loc private_ [ record_ty; ty ]) in
-        field)
+        Selector.Per_field Fields, field)
     in
     let getters_and_setters =
       List.concat
@@ -410,15 +434,19 @@ module Gen_sig = struct
              labdec
            in
            let record_ty = apply_type ~loc ~ty_name ~tps in
-           let getter = A.sig_item ~loc name [%type: [%t record_ty] -> [%t ty]] in
+           let getter =
+             ( Selector.Per_field Getters
+             , A.sig_item ~loc name [%type: [%t record_ty] -> [%t ty]] )
+           in
            match m, private_ with
            | Immutable, _ | Mutable, Private -> [ getter ]
            | Mutable, Public ->
              let setter =
-               A.sig_item
-                 ~loc
-                 ("set_" ^ name)
-                 [%type: [%t record_ty] -> [%t ty] -> unit]
+               ( Selector.Per_field Setters
+               , A.sig_item
+                   ~loc
+                   ("set_" ^ name)
+                   [%type: [%t record_ty] -> [%t ty] -> unit] )
              in
              [ getter; setter ]))
     in
@@ -429,7 +457,7 @@ module Gen_sig = struct
     in
     let iter = iter_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let fold = fold_fun ~private_ ~ty_name ~tps ~loc labdecs in
-    let fold_right = lazy (fold_right_fun ~private_ ~ty_name ~tps ~loc labdecs) in
+    let fold_right = fold_right_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let map = map_fun ~ty_name ~tps ~loc labdecs in
     let map_poly = map_poly ~private_ ~ty_name ~tps ~loc labdecs in
     let and_f = bool_fun "for_all" ~private_ ~ty_name ~tps ~loc labdecs in
@@ -437,57 +465,58 @@ module Gen_sig = struct
     let to_list = to_list_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let direct_iter = direct_iter_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let direct_fold = direct_fold_fun ~private_ ~ty_name ~tps ~loc labdecs in
-    let direct_fold_right =
-      lazy (direct_fold_right_fun ~private_ ~ty_name ~tps ~loc labdecs)
-    in
+    let direct_fold_right = direct_fold_right_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let direct_map = direct_map_fun ~ty_name ~tps ~loc labdecs in
     let direct_and_f = direct_bool_fun "for_all" ~private_ ~ty_name ~tps ~loc labdecs in
     let direct_or_f = direct_bool_fun "exists" ~private_ ~ty_name ~tps ~loc labdecs in
     let direct_to_list = direct_to_list_fun ~private_ ~ty_name ~tps ~loc labdecs in
     let set_all_mutable_fields = set_all_mutable_fields ~ty_name ~tps ~loc labdecs in
-    getters_and_setters
-    @ [ A.sig_mod
-          ~loc
-          fields_module
-          (List.concat
-             [ [ A.sig_item ~loc "names" [%type: string list] ]
-             ; fields
-             ; [ fold ]
-             ; (if include_fold_right then [ force fold_right ] else [])
-             ; (match private_ with
-                (* The ['perm] phantom type prohibits first-class fields from mutating or
-                   creating private records, so we can expose them (and fold, etc.).
+    List.concat
+      [ getters_and_setters
+      ; [ Per_field Names, A.sig_item ~loc "names" [%type: string list] ]
+      ; fields
+      ; [ Iterator Fold, fold; Iterator Fold_right, fold_right ]
+      ; (match private_ with
+         (* The ['perm] phantom type prohibits first-class fields from mutating or
+            creating private records, so we can expose them (and fold, etc.).
 
-                   However, we still can't expose functions that explicitly create private
-                   records. *)
-                | Private -> []
-                | Public -> [ create_fun; simple_create_fun; map ])
-             ; [ iter
-               ; and_f
-               ; or_f
-               ; to_list
-               ; map_poly
-               ; A.sig_mod
-                   ~loc
-                   "Direct"
-                   (List.concat
-                      [ [ direct_iter
-                        ; direct_fold
-                        ; direct_and_f
-                        ; direct_or_f
-                        ; direct_to_list
-                        ]
-                      ; (if include_fold_right then [ force direct_fold_right ] else [])
-                      ; (match private_ with
-                         | Private -> []
-                         | Public -> [ direct_map; set_all_mutable_fields ])
-                      ])
-               ]
-             ])
+            However, we still can't expose functions that explicitly create private
+            records. *)
+         | Private -> []
+         | Public ->
+           [ Iterator Make_creator, create_fun
+           ; Iterator Create, simple_create_fun
+           ; Iterator Map, map
+           ])
+      ; [ Iterator Iter, iter
+        ; Iterator For_all, and_f
+        ; Iterator Exists, or_f
+        ; Iterator To_list, to_list
+        ; Iterator Map_poly, map_poly
+        ; Direct_iterator Iter, direct_iter
+        ; Direct_iterator Fold, direct_fold
+        ; Direct_iterator For_all, direct_and_f
+        ; Direct_iterator Exists, direct_or_f
+        ; Direct_iterator To_list, direct_to_list
+        ; Direct_iterator Fold_right, direct_fold_right
+        ]
+      ; (match private_ with
+         | Private -> []
+         | Public ->
+           [ Direct_iterator Map, direct_map
+           ; Direct_iterator Set_all_mutable_fields, set_all_mutable_fields
+           ])
       ]
+    |> assemble
+         ~loc
+         ~selection
+         ~fields_module
+         ~make_module:A.sig_mod
+         ~make_error:(fun error ->
+           psig_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
-  let fields_of_td (td : type_declaration) ~include_fold_right : signature =
+  let fields_of_td (td : type_declaration) ~selection : signature =
     let { ptype_name = { txt = ty_name; loc }
         ; ptype_private = private_
         ; ptype_params
@@ -501,14 +530,18 @@ module Gen_sig = struct
     match ptype_kind with
     | Ptype_record labdecs ->
       check_no_collision labdecs;
-      record ~private_ ~ty_name ~tps ~loc ~include_fold_right labdecs
+      record ~private_ ~ty_name ~tps ~loc ~selection labdecs
     | _ -> []
   ;;
 
-  let generate ~loc ~path:_ (rec_flag, tds) include_fold_right =
-    let tds = List.map tds ~f:name_type_params_in_td in
-    check_at_least_one_record ~loc rec_flag tds;
-    List.concat_map tds ~f:(fields_of_td ~include_fold_right)
+  let generate ~ctxt (rec_flag, tds) selection =
+    let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    match selection with
+    | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
+    | Ok selection ->
+      let tds = List.map tds ~f:name_type_params_in_td in
+      check_at_least_one_record ~loc rec_flag tds;
+      List.concat_map tds ~f:(fields_of_td ~selection)
   ;;
 end
 
@@ -520,15 +553,17 @@ module Gen_struct = struct
       | [ _ ] -> None
       | _ :: _ :: _ -> Some [%expr _r__]
     in
-    let conv_field labdec : structure * structure_item =
+    let conv_field labdec =
       let { pld_name = { txt = name; loc }; pld_type = field_ty; pld_mutable = m; _ } =
         labdec
       in
       let getter =
-        A.str_item
-          ~loc
-          name
-          [%expr fun _r__ -> [%e pexp_field ~loc [%expr _r__] (Located.lident ~loc name)]]
+        ( Selector.Per_field Getters
+        , A.str_item
+            ~loc
+            name
+            [%expr
+              fun _r__ -> [%e pexp_field ~loc [%expr _r__] (Located.lident ~loc name)]] )
       in
       let setter, setter_field =
         match m, private_ with
@@ -538,13 +573,18 @@ module Gen_struct = struct
             Some (fun _ _ -> failwith "invalid call to a setter of a private type")] )
         | Mutable, Public ->
           let setter =
-            A.str_item
-              ~loc
-              ("set_" ^ name)
-              [%expr
-                fun _r__ v__ ->
-                  [%e
-                    pexp_setfield ~loc [%expr _r__] (Located.lident ~loc name) [%expr v__]]]
+            ( Selector.Per_field Setters
+            , A.str_item
+                ~loc
+                ("set_" ^ name)
+                [%expr
+                  fun _r__ v__ ->
+                    [%e
+                      pexp_setfield
+                        ~loc
+                        [%expr _r__]
+                        (Located.lident ~loc name)
+                        [%expr v__]]] )
           in
           let setter_field = [%expr Some [%e evar ~loc ("set_" ^ name)]] in
           [ setter ], setter_field
@@ -571,7 +611,7 @@ module Gen_struct = struct
               ; fset = [%e fset]
               }]
         in
-        A.str_item ~loc name (pexp_constraint ~loc body annot)
+        Selector.Per_field Fields, A.str_item ~loc name (pexp_constraint ~loc body annot)
       in
       getter :: setter, field
     in
@@ -884,7 +924,7 @@ module Gen_struct = struct
     | x :: xs -> List.fold_left ~init:x xs ~f:(fun x y -> pexp_sequence ~loc y x)
   ;;
 
-  let set_all_mutable_fields ~loc labdecs : structure_item =
+  let set_all_mutable_fields ~loc labdecs =
     let record_name = "_record__" in
     let body =
       let exprs =
@@ -922,12 +962,7 @@ module Gen_struct = struct
     [%stri let[@inline always] set_all_mutable_fields = [%e body]]
   ;;
 
-  let record
-        ~private_
-        ~record_name
-        ~loc
-        ~include_fold_right
-        (labdecs : label_declaration list)
+  let record ~private_ ~record_name ~loc ~selection (labdecs : label_declaration list)
     : structure
     =
     let getter_and_setters, fields = gen_fields ~private_ ~loc labdecs in
@@ -939,7 +974,7 @@ module Gen_struct = struct
     in
     let iter = iter_fun ~loc labdecs in
     let fold = fold_fun ~loc labdecs in
-    let fold_right = lazy (fold_right_fun ~loc labdecs) in
+    let fold_right = fold_right_fun ~loc labdecs in
     let map = map_fun ~loc labdecs in
     let map_poly = map_poly ~loc labdecs in
     let andf = and_fun ~loc labdecs in
@@ -947,45 +982,54 @@ module Gen_struct = struct
     let to_list = to_list_fun ~loc labdecs in
     let direct_iter = direct_iter_fun ~loc labdecs in
     let direct_fold = direct_fold_fun ~loc labdecs in
-    let direct_fold_right = lazy (direct_fold_right_fun ~loc labdecs) in
+    let direct_fold_right = direct_fold_right_fun ~loc labdecs in
     let direct_andf = direct_and_fun ~loc labdecs in
     let direct_orf = direct_or_fun ~loc labdecs in
     let direct_map = direct_map_fun ~loc labdecs in
     let direct_to_list = direct_to_list_fun ~loc labdecs in
     let set_all_mutable_fields = set_all_mutable_fields ~loc labdecs in
-    getter_and_setters
-    @ [ A.mod_
-          ~loc
-          fields_module
-          (List.concat
-             [ [ A.str_item ~loc "names" (elist ~loc names) ]
-             ; fields
-             ; (match private_ with
-                | Private -> []
-                | Public -> [ create; simple_create; map ])
-             ; [ iter; fold; map_poly; andf; orf; to_list ]
-             ; (if include_fold_right then [ force fold_right ] else [])
-             ; [ A.mod_
-                   ~loc
-                   "Direct"
-                   (List.concat
-                      [ [ direct_iter
-                        ; direct_fold
-                        ; direct_andf
-                        ; direct_orf
-                        ; direct_to_list
-                        ]
-                      ; (if include_fold_right then [ force direct_fold_right ] else [])
-                      ; (match private_ with
-                         | Private -> []
-                         | Public -> [ direct_map; set_all_mutable_fields ])
-                      ])
-               ]
-             ])
+    List.concat
+      [ getter_and_setters
+      ; [ Per_field Names, A.str_item ~loc "names" (elist ~loc names) ]
+      ; fields
+      ; (match private_ with
+         | Private -> []
+         | Public ->
+           [ Iterator Make_creator, create
+           ; Iterator Create, simple_create
+           ; Iterator Map, map
+           ])
+      ; [ Iterator Iter, iter
+        ; Iterator Fold, fold
+        ; Iterator Map_poly, map_poly
+        ; Iterator For_all, andf
+        ; Iterator Exists, orf
+        ; Iterator To_list, to_list
+        ; Iterator Fold_right, fold_right
+        ; Direct_iterator Iter, direct_iter
+        ; Direct_iterator Fold, direct_fold
+        ; Direct_iterator For_all, direct_andf
+        ; Direct_iterator Exists, direct_orf
+        ; Direct_iterator To_list, direct_to_list
+        ; Direct_iterator Fold_right, direct_fold_right
+        ]
+      ; (match private_ with
+         | Private -> []
+         | Public ->
+           [ Direct_iterator Map, direct_map
+           ; Direct_iterator Set_all_mutable_fields, set_all_mutable_fields
+           ])
       ]
+    |> assemble
+         ~loc
+         ~selection
+         ~fields_module
+         ~make_module:A.mod_
+         ~make_error:(fun error ->
+           pstr_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
-  let fields_of_td (td : type_declaration) ~include_fold_right : structure =
+  let fields_of_td (td : type_declaration) ~selection : structure =
     let { ptype_name = { txt = record_name; loc }
         ; ptype_private = private_
         ; ptype_kind
@@ -997,23 +1041,24 @@ module Gen_struct = struct
     match ptype_kind with
     | Ptype_record labdecs ->
       check_no_collision labdecs;
-      record ~private_ ~record_name ~loc ~include_fold_right labdecs
+      record ~private_ ~record_name ~loc ~selection labdecs
     | _ -> []
   ;;
 
-  let generate ~loc ~path:_ (rec_flag, tds) include_fold_right =
-    let tds = List.map tds ~f:name_type_params_in_td in
-    check_at_least_one_record ~loc rec_flag tds;
-    List.concat_map tds ~f:(fields_of_td ~include_fold_right)
+  let generate ~ctxt (rec_flag, tds) selection =
+    let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    match selection with
+    | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
+    | Ok selection ->
+      let tds = List.map tds ~f:name_type_params_in_td in
+      check_at_least_one_record ~loc rec_flag tds;
+      List.concat_map tds ~f:(fields_of_td ~selection)
   ;;
 end
-
-let include_fold_right_args () = Deriving.Args.(empty +> flag "fold_right")
 
 let fields =
   Deriving.add
     "fields"
-    ~str_type_decl:
-      (Deriving.Generator.make (include_fold_right_args ()) Gen_struct.generate)
-    ~sig_type_decl:(Deriving.Generator.make (include_fold_right_args ()) Gen_sig.generate)
+    ~str_type_decl:(Selector.generator Gen_struct.generate ~add_dependencies:true)
+    ~sig_type_decl:(Selector.generator Gen_sig.generate ~add_dependencies:false)
 ;;

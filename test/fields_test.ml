@@ -3,13 +3,19 @@ module Simple : sig
     { x : int
     ; w : int
     }
-  [@@deriving fields]
+  [@@deriving
+    fields
+      ~iterators:(create, fold_right, for_all, exists, map, to_list, fold, iter)
+      ~direct_iterators:(for_all, exists, map, to_list, fold, fold_right, iter)]
 end = struct
   type t =
     { x : int
     ; w : int
     }
-  [@@deriving fields ~fold_right]
+  [@@deriving
+    fields
+      ~iterators:(create, fold_right, for_all, exists, map, to_list, fold, iter)
+      ~direct_iterators:(for_all, exists, map, to_list, fold, fold_right, iter)]
 
   let%test _ = Fields.create ~x:2 ~w:4 = { x = 2; w = 4 }
 

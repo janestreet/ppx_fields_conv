@@ -1,0 +1,115 @@
+#print_line_numbers true
+
+type t =
+  { x : int
+  ; y : int
+  }
+[@@deriving fields ~fold_right]
+
+[%%expect
+  {|
+Line 7, characters 20-30:
+Error: deriving fields: [~fold_right] is no longer supported; use
+       [~iterators:fold_right] and/or [~direct_iterators:fold_right]
+|}]
+
+type t =
+  { x : int
+  ; y : int
+  }
+[@@deriving fields ~iterators:(1, 2) ~direct_iterators:3]
+
+[%%expect
+  {|
+Line 16, characters 0-94:
+Error: deriving fields: multiple syntax errors
+Line 20, characters 31-32:
+  deriving fields: expected a variable name
+Line 20, characters 34-35:
+  deriving fields: expected a variable name
+Line 20, characters 55-56:
+  deriving fields: expected a variable name or a tuple of variable names
+|}]
+
+type t =
+  { x : int
+  ; y : int
+  }
+[@@deriving fields ~iterators:x ~direct_iterators:(y, z)]
+
+[%%expect
+  {|
+Line 34, characters 0-94:
+Error: deriving fields: multiple syntax errors
+Line 38, characters 30-31:
+  deriving fields: [~iterators] does not accept [x] as an argument, valid
+  arguments are: [create], [make_creator], [exists], [fold], [fold_right],
+  [for_all], [iter], [map], [to_list], [map_poly]
+Line 38, characters 51-52:
+  deriving fields: [~direct_iterators] does not accept [y] as an argument,
+  valid arguments are: [exists], [fold], [fold_right], [for_all], [iter],
+  [map], [to_list], [set_all_mutable_fields]
+Line 38, characters 54-55:
+  deriving fields: [~direct_iterators] does not accept [z] as an argument,
+  valid arguments are: [exists], [fold], [fold_right], [for_all], [iter],
+  [map], [to_list], [set_all_mutable_fields]
+|}]
+
+type t =
+  { x : int
+  ; y : int
+  }
+[@@deriving fields ~getters:true ~setters:false]
+
+[%%expect
+  {|
+Line 58, characters 0-85:
+Error: deriving fields: multiple syntax errors
+Line 62, characters 28-32:
+  deriving fields: expected no explicit argument to [~getters]
+Line 62, characters 42-47:
+  deriving fields: expected no explicit argument to [~setters]
+|}]
+
+module _ = struct
+  type t =
+    { x : int
+    ; y : int
+    }
+  [@@deriving fields ~getters]
+
+  let _ = Fields.iter
+end
+
+[%%expect {|
+Line 81, characters 10-21:
+Error: Unbound module Fields
+|}]
+
+module _ (M : sig
+    type t =
+      { x : int
+      ; y : int
+      }
+    [@@deriving fields ~getters]
+  end) =
+struct
+  let _ = M.Fields.iter
+end
+
+[%%expect {|
+Line 97, characters 10-23:
+Error: Unbound module M.Fields
+|}]
+
+type t =
+  { x : int
+  ; y : int
+  }
+[@@deriving fields ~setters]
+
+[%%expect
+  {|
+Line 105, characters 5-6:
+Error: [@deriving fields]: no definitions generated
+|}]

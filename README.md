@@ -156,7 +156,7 @@ module Fields : sig
         -> price    :((t, float           ) Field.t -> t -> float            -> 'a)
         -> cancelled:((t, bool            ) Field.t -> t -> bool             -> 'a)
         -> 'a list
-        
+
       val set_all_mutable_fields : t -> cancelled:bool -> unit
     end
 
@@ -242,39 +242,49 @@ let to_string t =
 Addition of a new field would cause a type error reminding you to
 update the definition of `to_string`.
 
-# Opt-in functions
+# Selecting definitions
 
-There are some extra functions that `ppx_fields_conv` can also
-derive. These functions are not derived by default to avoid adding
-bloat to the generated code as they are not frequently needed.
-
-## `fold_right`
-
-Using `[@@deriving fields ~fold_right]` instead of `[@@deriving
-fields] on the type definition above would add two functions that are
-similar to `fold` but iterate in the opposite order (for brevity, the
-rest of the signature is omitted):
+The `[@@deriving fields]` clause allows options to specify which definitions it provides.
+Use `~getters` and `~setters` to explicitly select toplevel accessors, `fields` to select
+`Field.t` values, and `~names` to select `Fields.names`. Use `~iterators` with a tuple
+containing names chosen from `create`, `make_creator`, and so on, to select elements of
+`Fields`. Use `~direct_iterators` with a tuple of names to select elements of
+`Fields.Direct`. For example:
 
 ```ocaml
-(* ... *)
-val fold_right
-  :  dir      :((t, [ `Buy | `Sell ]) Field.t -> 'd -> 'e)
-  -> quantity :((t, int             ) Field.t -> 'c -> 'd)
-  -> price    :((t, float           ) Field.t -> 'b -> 'c)
-  -> cancelled:((t, bool            ) Field.t -> 'a -> 'b)
-  -> init:'a
-  -> 'e
-(* ... *)
-module Direct : sig
-  (* ... *)
+type t = { x : int; y : int }
+[@@deriving fields ~getters ~fields ~iterators:(fold, iter)
+```
+
+The above defines the accessors `x` and `y`, the field values
+`Fields.x` and `Fields.y`, `Fields.fold`, and `Fields.iter`.
+
+# Opt-in function: `fold_right`
+
+By default, `[@@deriving fields]` derives all available functions except
+`Fields.fold_right` and `Fields.Direct.fold_right`. These functions can be selected via
+`~iterators:fold_right` and `~direct_iterators:fold_right`. Their signatures (when selected)
+are as follows.
+
+```ocaml
+module Fields : sig
   val fold_right
-    :  t
-    -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> 'd -> 'e)
-    -> quantity :((t, int             ) Field.t -> t -> int              -> 'c -> 'd)
-    -> price    :((t, float           ) Field.t -> t -> float            -> 'b -> 'c)
-    -> cancelled:((t, bool            ) Field.t -> t -> bool             -> 'a -> 'b)
+    :  dir      :((t, [ `Buy | `Sell ]) Field.t -> 'd -> 'e)
+    -> quantity :((t, int             ) Field.t -> 'c -> 'd)
+    -> price    :((t, float           ) Field.t -> 'b -> 'c)
+    -> cancelled:((t, bool            ) Field.t -> 'a -> 'b)
     -> init:'a
     -> 'e
-  (* ... *)
+
+  module Direct : sig
+    val fold_right
+      :  t
+      -> dir      :((t, [ `Buy | `Sell ]) Field.t -> t -> [ `Buy | `Sell ] -> 'd -> 'e)
+      -> quantity :((t, int             ) Field.t -> t -> int              -> 'c -> 'd)
+      -> price    :((t, float           ) Field.t -> t -> float            -> 'b -> 'c)
+      -> cancelled:((t, bool            ) Field.t -> t -> bool             -> 'a -> 'b)
+      -> init:'a
+      -> 'e
+  end
 end
 ```
