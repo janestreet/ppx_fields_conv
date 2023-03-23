@@ -18,12 +18,10 @@ end = struct
       ~direct_iterators:(for_all, exists, map, to_list, fold, fold_right, iter)]
 
   let%test _ = Fields.create ~x:2 ~w:4 = { x = 2; w = 4 }
-
   let all_even = { x = 2; w = 4 }
   let some_even = { x = 1; w = 4 }
   let none_even = { x = 1; w = 3 }
   let is_even t field = Fieldslib.Field.get field t mod 2 = 0
-
   let%test _ = Fields.for_all ~x:(is_even all_even) ~w:(is_even all_even) = true
   let%test _ = Fields.for_all ~x:(is_even some_even) ~w:(is_even some_even) = false
   let%test _ = Fields.exists ~x:(is_even some_even) ~w:(is_even some_even) = true
@@ -38,10 +36,8 @@ end = struct
   let%test _ = Fields.Direct.for_all some_even ~x:is_even ~w:is_even = false
   let%test _ = Fields.Direct.exists some_even ~x:is_even ~w:is_even = true
   let%test _ = Fields.Direct.exists none_even ~x:is_even ~w:is_even = false
-
   let t = { x = 1; w = 3 }
   let add_one t field = Fieldslib.Field.get field t + 1
-
   let%test _ = Fields.map ~x:(add_one t) ~w:(add_one t) = { x = 2; w = 4 }
   let%test _ = Fields.to_list ~x:(add_one t) ~w:(add_one t) = [ 2; 4 ]
 
@@ -52,13 +48,9 @@ end = struct
 
   let%test _ = Fields.Direct.map t ~x:add_one ~w:add_one = { x = 2; w = 4 }
   let%test _ = Fields.Direct.to_list t ~x:add_one ~w:add_one = [ 2; 4 ]
-
   let fold_one t acc field = (Fieldslib.Field.get field t + 1) :: acc
-
   let%test _ = Fields.fold ~init:[] ~x:(fold_one t) ~w:(fold_one t) = [ 4; 2 ]
-
   let fold_one t field acc = (Fieldslib.Field.get field t + 1) :: acc
-
   let%test _ = Fields.fold_right ~x:(fold_one t) ~w:(fold_one t) ~init:[] = [ 2; 4 ]
 
   let fold_one acc field t n =
@@ -74,7 +66,6 @@ end = struct
   ;;
 
   let%test _ = Fields.Direct.fold_right t ~x:fold_one ~w:fold_one ~init:[] = [ 2; 4 ]
-
   let iter_one t buf field = buf := (Fieldslib.Field.get field t + 1) :: !buf
 
   let%test _ =
@@ -108,7 +99,6 @@ module Multiple_names = struct
 
   let%test _ = b { b = 1 } = 1
   let%test _ = a { a = 1 } = 1
-
   let _ = Fields_of_a.a
   let _ = Fields_of_b.b
   let _ = (Fields_of_a.a : (_, _) Fieldslib.Field.t :> (_, _) Fieldslib.Field.readonly_t)
