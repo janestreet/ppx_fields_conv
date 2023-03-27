@@ -120,14 +120,14 @@ let check_at_least_one_record ~loc rec_flag tds =
   | Nonrecursive ->
     Error (Location.Error.createf ~loc "nonrec is not compatible with the `fields' preprocessor")
   | _ -> 
-    let is_record td =
-      match td.ptype_kind with
-      | Ptype_record _ -> true
-      | _ -> false
-    in
-    if not (List.exists tds ~f:is_record)
-    then 
-      Error (Location.Error.createf  
+  let is_record td =
+    match td.ptype_kind with
+    | Ptype_record _ -> true
+    | _ -> false
+  in
+  if not (List.exists tds ~f:is_record)
+  then 
+    Error (Location.Error.createf  
       ~loc 
       (match tds with
        | [ _ ] -> "Unsupported use of fields (you can only use it on records)."
