@@ -116,24 +116,26 @@ let field_t ~loc private_ tps =
 ;;
 
 let check_at_least_one_record ~loc rec_flag tds =
-  (match rec_flag with
-   | Nonrecursive ->
-     Location.raise_errorf ~loc "nonrec is not compatible with the `fields' preprocessor"
-   | _ -> ());
-  let is_record td =
-    match td.ptype_kind with
-    | Ptype_record _ -> true
-    | _ -> false
-  in
-  if not (List.exists tds ~f:is_record)
-  then
-    Location.raise_errorf
-      ~loc
+  match rec_flag with
+  | Nonrecursive ->
+    Error (Location.Error.createf ~loc "nonrec is not compatible with the `fields' preprocessor")
+  | _ -> 
+    let is_record td =
+      match td.ptype_kind with
+      | Ptype_record _ -> true
+      | _ -> false
+    in
+    if not (List.exists tds ~f:is_record)
+    then 
+      Error (Location.Error.createf  
+      ~loc 
       (match tds with
        | [ _ ] -> "Unsupported use of fields (you can only use it on records)."
        | _ ->
          "'with fields' can only be applied on type definitions in which at least one \
-          type definition is a record")
+          type definition is a record"))
+    else Ok ();
+
 ;;
 
 let module_defn defns ~name ~loc ~make_module =
