@@ -128,9 +128,9 @@ let check_at_least_one_record ~loc rec_flag tds =
     | _ -> false
   in
   if not (List.exists tds ~f:is_record)
-  then 
-    [Location.Error.createf  
-      ~loc 
+  then
+    [Location.Error.createf
+      ~loc
       (match tds with
        | [ _ ] -> "Unsupported use of fields (you can only use it on records)."
        | _ ->
@@ -545,8 +545,9 @@ module Gen_sig = struct
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
-      check_at_least_one_record ~loc rec_flag tds;
-      List.concat_map tds ~f:(fields_of_td ~selection)
+      match check_at_least_one_record ~loc rec_flag tds with
+      | [] -> List.concat_map tds ~f:(fields_of_td ~selection)
+      | _ -> List.map (check_at_least_one_record ~loc rec_flag tds) ~f:(fun e -> psig_extension ~loc (Location.Error.to_extension e) [])
   ;;
 end
 
@@ -1056,8 +1057,9 @@ module Gen_struct = struct
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
-      check_at_least_one_record ~loc rec_flag tds;
-      List.concat_map tds ~f:(fields_of_td ~selection)
+      match check_at_least_one_record ~loc rec_flag tds with
+      | [] -> List.concat_map tds ~f:(fields_of_td ~selection)
+      | _ -> List.map (check_at_least_one_record ~loc rec_flag tds) ~f:(fun e -> pstr_extension ~loc (Location.Error.to_extension e) [])
   ;;
 end
 
