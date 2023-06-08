@@ -10,7 +10,7 @@ open Ppxlib
 open Ast_builder.Default
 module Selector = Selector
 
-let check_no_collision =
+let get_all_collisions =
   let always =
     [ "make_creator"
     ; "create"
@@ -40,9 +40,9 @@ let check_no_collision =
          Some (Location.Error.createf      
           ~loc:pld_loc
           "ppx_fields_conv: field name %S conflicts with one of the generated functions"
-          pld_name.txt)
-else 
-  None)
+          pld_name.txt) 
+      else 
+        None)
 ;;
 
 module A = struct
@@ -118,10 +118,10 @@ let field_t ~loc private_ tps =
 ;;
 
 let check_at_least_one_record ~loc rec_flag tds =
-  match rec_flag with
-  | Nonrecursive ->
-    [Location.Error.createf ~loc "nonrec is not compatible with the `fields' preprocessor"]
-  | _ -> 
+  (match rec_flag with
+   | Nonrecursive ->
+     Location.raise_errorf ~loc "nonrec is not compatible with the `fields' preprocessor"
+   | _ -> ());
   let is_record td =
     match td.ptype_kind with
     | Ptype_record _ -> true
@@ -129,16 +129,13 @@ let check_at_least_one_record ~loc rec_flag tds =
   in
   if not (List.exists tds ~f:is_record)
   then
-    [Location.Error.createf
+    Location.raise_errorf
       ~loc
       (match tds with
        | [ _ ] -> "Unsupported use of fields (you can only use it on records)."
        | _ ->
          "'with fields' can only be applied on type definitions in which at least one \
-          type definition is a record")]
-    else [];
-
-
+          type definition is a record")
 ;;
 
 let module_defn defns ~name ~loc ~make_module =
@@ -531,13 +528,15 @@ module Gen_sig = struct
       =
       td
     in
-    let tps = List.map ptype_params ~f:(fun (tp, _variance) -> tp) in
+    let tps = List.filter_map ptype_params ~f:(fun (tp, _variance) -> Some tp) in
     match ptype_kind with
     | Ptype_record labdecs ->
-      check_no_collision labdecs;
-      record ~private_ ~ty_name ~tps ~loc ~selection labdecs
-    | _ -> []
-  ;;
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
+      [] -> record ~private_ ~ty_name ~tps ~loc ~selection labdecs
+      | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> psig_extension ~loc (Location.Error.to_extension e) []))
+      | _ -> []
+    ;;
 
   let generate ~ctxt (rec_flag, tds) selection =
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
@@ -545,9 +544,8 @@ module Gen_sig = struct
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
-      match check_at_least_one_record ~loc rec_flag tds with
-      | [] -> List.concat_map tds ~f:(fields_of_td ~selection)
-      | _ -> List.map (check_at_least_one_record ~loc rec_flag tds) ~f:(fun e -> psig_extension ~loc (Location.Error.to_extension e) [])
+        check_at_least_one_record ~loc rec_flag tds;
+      List.concat_map tds ~f:(fields_of_td ~selection)
   ;;
 end
 
@@ -1046,8 +1044,10 @@ module Gen_struct = struct
     in
     match ptype_kind with
     | Ptype_record labdecs ->
-      check_no_collision labdecs;
-      record ~private_ ~record_name ~loc ~selection labdecs
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
+      [] ->       record ~private_ ~record_name ~loc ~selection labdecs
+      | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> pstr_extension ~loc (Location.Error.to_extension e) []))
     | _ -> []
   ;;
 
@@ -1057,9 +1057,8 @@ module Gen_struct = struct
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
-      match check_at_least_one_record ~loc rec_flag tds with
-      | [] -> List.concat_map tds ~f:(fields_of_td ~selection)
-      | _ -> List.map (check_at_least_one_record ~loc rec_flag tds) ~f:(fun e -> pstr_extension ~loc (Location.Error.to_extension e) [])
+      check_at_least_one_record ~loc rec_flag tds;
+      List.concat_map tds ~f:(fields_of_td ~selection)
   ;;
 end
 
