@@ -544,7 +544,7 @@ module Gen_sig = struct
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
-        check_at_least_one_record ~loc rec_flag tds;
+      check_at_least_one_record ~loc rec_flag tds;
       List.concat_map tds ~f:(fields_of_td ~selection)
   ;;
 end
