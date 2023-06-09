@@ -52,12 +52,12 @@ module A = struct
 
   let mod_ ~loc : string -> structure -> structure_item =
     fun name structure ->
-      pstr_module
-        ~loc
-        (module_binding
-           ~loc
-           ~name:(Located.mk ~loc (Some name))
-           ~expr:(pmod_structure ~loc structure))
+    pstr_module
+      ~loc
+      (module_binding
+         ~loc
+         ~name:(Located.mk ~loc (Some name))
+         ~expr:(pmod_structure ~loc structure))
   ;;
 
   let sig_item ~loc name typ =
@@ -68,12 +68,12 @@ module A = struct
 
   let sig_mod ~loc : string -> signature -> signature_item =
     fun name signature ->
-      psig_module
-        ~loc
-        (module_declaration
-           ~loc
-           ~name:(Located.mk ~loc (Some name))
-           ~type_:(pmty_signature ~loc signature))
+    psig_module
+      ~loc
+      (module_declaration
+         ~loc
+         ~name:(Located.mk ~loc (Some name))
+         ~type_:(pmty_signature ~loc signature))
   ;;
 end
 
