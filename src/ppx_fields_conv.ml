@@ -528,10 +528,11 @@ module Gen_sig = struct
       =
       td
     in
-    let tps = List.filter_map ptype_params ~f:(fun (tp, _variance) -> Some tp) in
+    let tps = List.map ptype_params ~f:(fun (tp, _variance) -> tp) in
     match ptype_kind with
     | Ptype_record labdecs ->
-      (match get_all_collisions labdecs with 
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
       [] -> record ~private_ ~ty_name ~tps ~loc ~selection labdecs
       | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> psig_extension ~loc (Location.Error.to_extension e) []))
       | _ -> []
@@ -1043,7 +1044,8 @@ module Gen_struct = struct
     in
     match ptype_kind with
     | Ptype_record labdecs ->
-      (match get_all_collisions labdecs with 
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
       [] ->       record ~private_ ~record_name ~loc ~selection labdecs
       | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> pstr_extension ~loc (Location.Error.to_extension e) []))
     | _ -> []
