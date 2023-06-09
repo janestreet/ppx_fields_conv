@@ -1,3 +1,11 @@
+## Release v0.16.0
+
+* Added options to `[@@deriving fields]` for selecting a subset of definitions.
+  For example, `[@@deriving fields ~getters ~setters]` derives getter and setter
+  functions only, and omits the entire `Fields` submodule.
+
+## Old pre-v0.15 changelogs (very likely stale and incomplete)
+
 ## v0.11
 
 - Depend on ppxlib instead of (now deprecated) ppx\_core, ppx\_driver,
