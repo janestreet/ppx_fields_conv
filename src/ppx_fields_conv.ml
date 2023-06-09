@@ -534,7 +534,7 @@ module Gen_sig = struct
       let list_of_collisions = get_all_collisions  labdecs in
       (match list_of_collisions with 
       [] -> record ~private_ ~ty_name ~tps ~loc ~selection labdecs
-      | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> psig_extension ~loc (Location.Error.to_extension e) []))
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> psig_extension ~loc (Location.Error.to_extension error) []))
       | _ -> []
     ;;
 
@@ -1047,7 +1047,7 @@ module Gen_struct = struct
       let list_of_collisions = get_all_collisions  labdecs in
       (match list_of_collisions with 
       [] ->       record ~private_ ~record_name ~loc ~selection labdecs
-      | _ -> List.map (get_all_collisions labdecs) ~f:(fun e -> pstr_extension ~loc (Location.Error.to_extension e) []))
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> pstr_extension ~loc (Location.Error.to_extension error) []))
     | _ -> []
   ;;
 
