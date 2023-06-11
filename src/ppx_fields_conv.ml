@@ -58,8 +58,8 @@ module A = struct
       ~loc
       (module_binding
          ~loc
-          ~name:(Located.mk ~loc (Some name))
-          ~expr:(pmod_structure ~loc structure))
+        ~name:(Located.mk ~loc (Some name))
+        ~expr:(pmod_structure ~loc structure))
   ;;
 
   let sig_item ~loc name typ =
@@ -73,9 +73,9 @@ module A = struct
     psig_module
       ~loc
       (module_declaration
-          ~loc
-          ~name:(Located.mk ~loc (Some name))
-          ~type_:(pmty_signature ~loc signature))
+         ~loc
+         ~name:(Located.mk ~loc (Some name))
+         ~type_:(pmty_signature ~loc signature))
   ;;
 end
 
