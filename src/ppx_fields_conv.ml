@@ -10,7 +10,7 @@ open Ppxlib
 open Ast_builder.Default
 module Selector = Selector
 
-let check_no_collision =
+let get_all_collisions =
   let always =
     [ "make_creator"
     ; "create"
@@ -34,13 +34,15 @@ let check_no_collision =
       in
       ("set_all_mutable_fields" :: extra_forbidden_names) @ always
     in
-    List.iter lbls ~f:(fun { pld_name; pld_loc; _ } ->
+    List.filter_map lbls ~f:(fun { pld_name; pld_loc; _ } ->
       if List.mem generated_funs pld_name.txt ~equal:String.equal
       then
-        Location.raise_errorf
+         Some (Location.Error.createf      
           ~loc:pld_loc
           "ppx_fields_conv: field name %S conflicts with one of the generated functions"
-          pld_name.txt)
+          pld_name.txt) 
+      else 
+        None)
 ;;
 
 module A = struct
@@ -52,12 +54,12 @@ module A = struct
 
   let mod_ ~loc : string -> structure -> structure_item =
     fun name structure ->
-    pstr_module
-      ~loc
-      (module_binding
-         ~loc
-         ~name:(Located.mk ~loc (Some name))
-         ~expr:(pmod_structure ~loc structure))
+      pstr_module
+        ~loc
+        (module_binding
+           ~loc
+           ~name:(Located.mk ~loc (Some name))
+           ~expr:(pmod_structure ~loc structure))
   ;;
 
   let sig_item ~loc name typ =
@@ -68,12 +70,12 @@ module A = struct
 
   let sig_mod ~loc : string -> signature -> signature_item =
     fun name signature ->
-    psig_module
-      ~loc
-      (module_declaration
-         ~loc
-         ~name:(Located.mk ~loc (Some name))
-         ~type_:(pmty_signature ~loc signature))
+      psig_module
+        ~loc
+        (module_declaration
+           ~loc
+           ~name:(Located.mk ~loc (Some name))
+           ~type_:(pmty_signature ~loc signature))
   ;;
 end
 
@@ -529,10 +531,12 @@ module Gen_sig = struct
     let tps = List.map ptype_params ~f:(fun (tp, _variance) -> tp) in
     match ptype_kind with
     | Ptype_record labdecs ->
-      check_no_collision labdecs;
-      record ~private_ ~ty_name ~tps ~loc ~selection labdecs
-    | _ -> []
-  ;;
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
+      [] -> record ~private_ ~ty_name ~tps ~loc ~selection labdecs
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> psig_extension ~loc (Location.Error.to_extension error) []))
+      | _ -> []
+    ;;
 
   let generate ~ctxt (rec_flag, tds) selection =
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
@@ -1040,8 +1044,10 @@ module Gen_struct = struct
     in
     match ptype_kind with
     | Ptype_record labdecs ->
-      check_no_collision labdecs;
-      record ~private_ ~record_name ~loc ~selection labdecs
+      let list_of_collisions = get_all_collisions  labdecs in
+      (match list_of_collisions with 
+      [] ->       record ~private_ ~record_name ~loc ~selection labdecs
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> pstr_extension ~loc (Location.Error.to_extension error) []))
     | _ -> []
   ;;
 
