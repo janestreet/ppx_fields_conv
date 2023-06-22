@@ -38,7 +38,7 @@ let get_all_collisions =
     List.filter_map lbls ~f:(fun { pld_name; pld_loc; _ } ->
       if List.mem generated_funs pld_name.txt ~equal:String.equal
       then
-         Some (Location.Error.createf      
+         Some (Location.error_extensionf      
           ~loc:pld_loc
           "ppx_fields_conv: field name %S conflicts with one of the generated functions"
           pld_name.txt) 
@@ -535,7 +535,7 @@ module Gen_sig = struct
       let list_of_collisions = get_all_collisions  labdecs in
       (match list_of_collisions with 
       [] -> record ~private_ ~ty_name ~tps ~loc ~selection labdecs
-      | _ -> List.map (list_of_collisions) ~f:(fun error -> psig_extension ~loc (Location.Error.to_extension error) []))
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> psig_extension ~loc (error) []))
       | _ -> []
     ;;
 
@@ -1048,7 +1048,7 @@ module Gen_struct = struct
       let list_of_collisions = get_all_collisions  labdecs in
       (match list_of_collisions with 
       [] ->       record ~private_ ~record_name ~loc ~selection labdecs
-      | _ -> List.map (list_of_collisions) ~f:(fun error -> pstr_extension ~loc (Location.Error.to_extension error) []))
+      | _ -> List.map (list_of_collisions) ~f:(fun error -> pstr_extension ~loc (error) []))
     | _ -> []
   ;;
 
