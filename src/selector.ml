@@ -139,8 +139,21 @@ let to_string = function
   | Direct_iterator x -> "~direct_iterators:" ^ Direct_iterator.to_variable_name x
 ;;
 
-let sexp_of_t t = Sexp.Atom (to_string t)
+let of_string string =
+  match List.find all ~f:(fun t -> String.equal string (to_string t)) with
+  | Some t -> t
+  | None -> raise_s (Atom (Printf.sprintf "unknown flag [%s]" string))
+;;
+
+include Sexpable.Of_stringable (struct
+    type nonrec t = t
+
+    let of_string = of_string
+    let to_string = to_string
+  end)
+
 let compare = (Poly.compare : t -> t -> int)
+let equal = (Poly.equal : t -> t -> bool)
 
 include (val Comparator.make ~compare ~sexp_of_t)
 

@@ -42,7 +42,9 @@ type t =
 
 val all : t list
 val compare : t -> t -> int
+val equal : t -> t -> bool
 val sexp_of_t : t -> Sexp.t
+val t_of_sexp : Sexp.t -> t
 
 include Comparator.S with type t := t
 
