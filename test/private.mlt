@@ -3,7 +3,7 @@ module T = struct
   type t = { a : int }
 end
 
-type t = T.t = private { a : int } [@@deriving fields]
+type t = T.t = private { a : int } [@@deriving fields ~fields ~iterators:map]
 
 let _ = Fields.map
 
@@ -52,9 +52,9 @@ Error: * (glob)
 
 (* Testing private in interfaces: *)
 module T : sig
-  type t = private { a : int } [@@deriving fields]
+  type t = private { a : int } [@@deriving fields ~fields ~iterators:map]
 end = struct
-  type t = { a : int } [@@deriving fields]
+  type t = { a : int } [@@deriving fields ~fields ~iterators:map]
 end
 
 let _ = T.Fields.map

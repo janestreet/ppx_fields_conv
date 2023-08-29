@@ -34,7 +34,7 @@ val dir       : t -> [ `Buy | `Sell ]
 
 # Selecting definitions
 
-The `[@@deriving fields]` clause accepts _selectors_ specifying which definitions it
+The `[@@deriving fields]` clause requires _selectors_ specifying which definitions it
 should provide. Use `~getters` and `~setters` to explicitly select toplevel accessors,
 `~fields` to select `Field.t` values, and `~names` to select `Fields.names`. Use
 `~iterators` with a tuple containing names chosen from `create`, `make_creator`, and so
@@ -49,11 +49,11 @@ type t = { x : int; y : int }
 The above defines the accessors `x` and `y`, the field values
 `Fields.x` and `Fields.y`, `Fields.fold`, and `Fields.iter`.
 
-By default, `[@@deriving fields]` with no selectors derives all of the functions below
-except `Fields.fold_right` and `Direct_iterator.fold_right`. This behavior can be changed
-with the `-deriving-fields-require-selectors` command-line argument, which currently
-defaults to `false`. Passing `true` instead causes `[@@derving fields]` with no selectors
-to produce an error during preprocessing.
+Writing `[@@deriving fields]` with no selectors will produce an error during
+preprocessing. Passing the command-line argument
+`-deriving-fields-require-selectors=false` restores the legacy behavior of deriving all of
+the below functions except `Fields.fold_right` and `Direct_iterator.fold_right`. This flag
+should only be used with external code.
 
 The full list of permitted selectors and the signatures of the corresponding functions
 follows:

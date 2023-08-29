@@ -5,13 +5,13 @@ type ('a, 'b) t =
   ; price : int * 'a
   ; mutable cancelled : bool
   }
-[@@deriving fields]
+[@@deriving fields ~getters ~setters]
 
 type foo =
   { a : [ `Bar | `Baz of string ]
   ; b : int
   }
-[@@deriving fields]
+[@@deriving fields ~getters ~setters]
 
 module Private_in_mli = struct
   type ('a, 'b) t =
@@ -20,7 +20,7 @@ module Private_in_mli = struct
     ; price : int * 'a
     ; mutable cancelled : bool
     }
-  [@@deriving fields]
+  [@@deriving fields ~getters ~setters]
 end
 
 module Private_in_ml = struct
@@ -30,5 +30,5 @@ module Private_in_ml = struct
     ; price : int * 'a
     ; mutable cancelled : bool
     }
-  [@@deriving fields]
+  [@@deriving fields ~getters ~setters]
 end

@@ -88,14 +88,14 @@ end
 
 module Rec = struct
   type a = { something1 : b }
-  and b = A of a [@@deriving fields]
+  and b = A of a [@@deriving fields ~getters]
 
   let _ = something1
 end
 
 module Multiple_names = struct
   type a = { a : int }
-  and b = { b : int } [@@deriving fields]
+  and b = { b : int } [@@deriving fields ~getters ~fields]
 
   let%test _ = b { b = 1 } = 1
   let%test _ = a { a = 1 } = 1
@@ -109,7 +109,7 @@ module Private : sig
     { a : int
     ; mutable b : int
     }
-  [@@deriving fields]
+  [@@deriving fields ~fields ~iterators:(fold, map_poly)]
 end = struct
   type u =
     { a : int
@@ -120,7 +120,7 @@ end = struct
     { a : int
     ; mutable b : int
     }
-  [@@deriving fields]
+  [@@deriving fields ~fields ~iterators:(fold, map_poly)]
 
   (* let _ = Fieldslib.Field.setter Fields.a *)
 end
@@ -143,11 +143,11 @@ let _ =
 module Warnings : sig
   (* could generate an unused warning but for crazy reasons, only
      when the type is private *)
-  type t = private { foo : int } [@@deriving fields]
+  type t = private { foo : int } [@@deriving fields ~getters]
 
   val foo : string
 end = struct
-  type t = { foo : int } [@@deriving fields]
+  type t = { foo : int } [@@deriving fields ~getters]
 
   let foo = "a"
 end
@@ -157,13 +157,12 @@ module Wildcard : sig
     { x : int
     ; y : string
     }
-  [@@deriving fields]
 end = struct
   type _ t =
     { x : int
     ; y : string
     }
-  [@@deriving fields]
+  [@@deriving fields ~getters]
 
   let _ = x
   let _ = y
@@ -177,14 +176,14 @@ let%test_module "set_all_mutable_fields" =
         ; b : string
         ; mutable c : 'a
         }
-      [@@deriving fields]
+      [@@deriving fields ~direct_iterators:set_all_mutable_fields]
     end = struct
       type 'a t =
         { mutable a : int
         ; b : string
         ; mutable c : 'a
         }
-      [@@deriving fields]
+      [@@deriving fields ~direct_iterators:set_all_mutable_fields]
     end
 
     open M
@@ -206,13 +205,13 @@ module M (F1 : sig
       ; b : string
       ; c : bool
       }
-    [@@deriving fields]
+    [@@deriving fields ~iterators:(create, fold) ~direct_iterators:fold]
   end) (F2 : sig
           type t =
             { a : int
             ; b : string
             }
-          [@@deriving fields]
+          [@@deriving fields ~iterators:create]
         end) =
 struct
   let convert : F1.t -> F2.t =
@@ -241,5 +240,5 @@ module Unused_warnings : sig end = struct
     { a : int
     ; b : int
     }
-  [@@deriving fields]
+  [@@deriving fields ~getters ~iterators:for_all ~direct_iterators:for_all]
 end

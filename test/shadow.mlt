@@ -1,4 +1,4 @@
-type t = { map : unit } [@@deriving fields]
+type t = { map : unit } [@@deriving fields ~iterators:map]
 
 [%%expect
   {|

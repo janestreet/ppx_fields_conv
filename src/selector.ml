@@ -1,6 +1,8 @@
 open! Base
 open Ppxlib
 
+let selectors_are_mandatory = ref false
+
 module Per_field = struct
   type t =
     | Getters
@@ -279,6 +281,19 @@ let error_of_alists ~loc alists =
   | sub -> Location.Error.make ~loc "deriving fields: multiple syntax errors" ~sub
 ;;
 
+let docs_url =
+  "https://github.com/janestreet/ppx_fields_conv/blob/master/README.md#selecting-definitions"
+;;
+
+let no_definitions_error_message =
+  String.concat
+    ~sep:" "
+    [ "No definitions selected."
+    ; "See the \"Selecting definitions\" section of the documentation:"
+    ; docs_url
+    ]
+;;
+
 let generator ~add_dependencies f =
   Deriving.Generator.V2.make
     (let open Deriving.Args in
@@ -294,7 +309,11 @@ let generator ~add_dependencies f =
        let loc = Expansion_context.Deriver.derived_item_loc ctxt in
        let results =
          match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7 ] with
-         | [] -> [ Ok default_selectors ]
+         | [] ->
+           [ (if !selectors_are_mandatory
+              then Error [ loc, no_definitions_error_message ]
+              else Ok default_selectors)
+           ]
          | _ :: _ as non_empty -> non_empty
        in
        let selection =
@@ -349,4 +368,14 @@ let deriving_clause ~loc list =
          ~loc
          [%expr fields]
          (List.concat [ per_field; iterators; direct_iterators ])))
+;;
+
+let () =
+  Driver.add_arg
+    "-deriving-fields-require-selectors"
+    (Bool (( := ) selectors_are_mandatory))
+    ~doc:
+      (Printf.sprintf
+         "BOOL Error if no selectors in [[@@deriving fields]] (default: %b)"
+         !selectors_are_mandatory)
 ;;

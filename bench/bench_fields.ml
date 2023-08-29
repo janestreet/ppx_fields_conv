@@ -26,7 +26,7 @@ let%bench_module "field_setting" =
       ; mutable f : int
       ; mutable g : int
       }
-    [@@deriving fields]
+    [@@deriving fields ~direct_iterators:set_all_mutable_fields]
 
     let set_manual t ~a ~c ~d ~e ~f ~g =
       t.a <- a;
@@ -75,7 +75,7 @@ let%bench_module "shorter_record_field_setting" =
       ; f : int
       ; g : int
       }
-    [@@deriving fields]
+    [@@deriving fields ~direct_iterators:set_all_mutable_fields]
 
     let set_manual t ~a ~c ~d =
       t.a <- a;

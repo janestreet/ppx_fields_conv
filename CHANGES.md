@@ -1,3 +1,9 @@
+## Unreleased
+
+* Added the `-deriving-fields-require-selectors` command-line flag, which can be used to
+  make writing `[@@derving fields]` with no selectors produce an error during
+  preprocessing.
+
 ## Release v0.16.0
 
 * Added options to `[@@deriving fields]` for selecting a subset of definitions.
