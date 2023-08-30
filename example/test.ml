@@ -1,4 +1,3 @@
-
 type ('a, 'b) t =
   { dir : 'a * 'b
   ; quantity : ('a, 'b) t

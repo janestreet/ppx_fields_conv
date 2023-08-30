@@ -52,7 +52,7 @@ include Comparator.S with type t := t
     flags, or reports a syntax error. *)
 val generator
   :  add_dependencies:bool
-  (** in the .ml we must define dependencies; in the mli we don't need to export them *)
+       (** in the .ml we must define dependencies; in the mli we don't need to export them *)
   -> (ctxt:Expansion_context.Deriver.t
       -> 'input
       -> ((t, comparator_witness) Set.t, Location.Error.t) Result.t

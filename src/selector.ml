@@ -148,11 +148,11 @@ let of_string string =
 ;;
 
 include Sexpable.Of_stringable (struct
-    type nonrec t = t
+  type nonrec t = t
 
-    let of_string = of_string
-    let to_string = to_string
-  end)
+  let of_string = of_string
+  let to_string = to_string
+end)
 
 let compare = (Poly.compare : t -> t -> int)
 let equal = (Poly.equal : t -> t -> bool)
@@ -306,23 +306,23 @@ let generator ~add_dependencies f =
      +> arg "iterators" (map1 __ ~f:select_iterators)
      +> arg "direct_iterators" (map1 __ ~f:select_direct_iterators))
     (fun ~ctxt ast arg1 arg2 arg3 arg4 arg5 arg6 arg7 ->
-       let loc = Expansion_context.Deriver.derived_item_loc ctxt in
-       let results =
-         match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7 ] with
-         | [] ->
-           [ (if !selectors_are_mandatory
-              then Error [ loc, no_definitions_error_message ]
-              else Ok default_selectors)
-           ]
-         | _ :: _ as non_empty -> non_empty
-       in
-       let selection =
-         Result.combine_errors results
-         |> Result.map ~f:List.concat
-         |> Result.map ~f:(selection ~add_dependencies)
-         |> Result.map_error ~f:(error_of_alists ~loc)
-       in
-       f ~ctxt ast selection)
+      let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+      let results =
+        match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7 ] with
+        | [] ->
+          [ (if !selectors_are_mandatory
+             then Error [ loc, no_definitions_error_message ]
+             else Ok default_selectors)
+          ]
+        | _ :: _ as non_empty -> non_empty
+      in
+      let selection =
+        Result.combine_errors results
+        |> Result.map ~f:List.concat
+        |> Result.map ~f:(selection ~add_dependencies)
+        |> Result.map_error ~f:(error_of_alists ~loc)
+      in
+      f ~ctxt ast selection)
 ;;
 
 let deriving_clause ~loc list =
@@ -333,9 +333,9 @@ let deriving_clause ~loc list =
     let per_field, iterators, direct_iterators =
       List.dedup_and_sort list ~compare
       |> List.partition3_map ~f:(function
-        | Per_field x -> `Fst x
-        | Iterator x -> `Snd x
-        | Direct_iterator x -> `Trd x)
+           | Per_field x -> `Fst x
+           | Iterator x -> `Snd x
+           | Direct_iterator x -> `Trd x)
     in
     let per_field =
       List.map per_field ~f:(fun x ->

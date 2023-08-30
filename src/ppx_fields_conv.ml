@@ -3,7 +3,6 @@
    use of [=].  It is especially important to not use polymorphic comparisons, since we
    are moving more and more to code that doesn't have them in scope. *)
 
-
 open Base
 open Printf
 open Ppxlib
@@ -232,8 +231,8 @@ module Gen_sig = struct
         ~private_
         ~record
         (fun ~field ~ty:field_ty ->
-           [%type:
-             [%t acc i] -> [%t field] -> [%t record] -> [%t field_ty] -> [%t acc (i + 1)]])
+          [%type:
+            [%t acc i] -> [%t field] -> [%t record] -> [%t field_ty] -> [%t acc (i + 1)]])
         arg
     in
     let types = List.mapi labdecs ~f in
@@ -257,7 +256,7 @@ module Gen_sig = struct
         ~private_
         ~record
         (fun ~field ~ty:_ ->
-           [%type: [%t field] -> [%t acc (numlabs - i - 1)] -> [%t acc (numlabs - i)]])
+          [%type: [%t field] -> [%t acc (numlabs - i - 1)] -> [%t acc (numlabs - i)]])
         arg
     in
     let types = List.mapi labdecs ~f in
@@ -276,12 +275,12 @@ module Gen_sig = struct
         ~private_
         ~record
         (fun ~field ~ty:field_ty ->
-           [%type:
-             [%t field]
-             -> [%t record]
-             -> [%t field_ty]
-             -> [%t acc (numlabs - i - 1)]
-             -> [%t acc (numlabs - i)]])
+          [%type:
+            [%t field]
+            -> [%t record]
+            -> [%t field_ty]
+            -> [%t acc (numlabs - i - 1)]
+            -> [%t acc (numlabs - i)]])
         arg
     in
     let types = List.mapi labdecs ~f in
@@ -513,7 +512,7 @@ module Gen_sig = struct
          ~fields_module
          ~make_module:A.sig_mod
          ~make_error:(fun error ->
-           psig_extension ~loc (Location.Error.to_extension error) [])
+         psig_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
   let fields_of_td (td : type_declaration) ~selection : signature =
@@ -570,7 +569,7 @@ module Gen_struct = struct
         | Mutable, Private ->
           ( []
           , [%expr
-            Some (fun _ _ -> failwith "invalid call to a setter of a private type")] )
+              Some (fun _ _ -> failwith "invalid call to a setter of a private type")] )
         | Mutable, Public ->
           let setter =
             ( Selector.Per_field Setters
@@ -1026,7 +1025,7 @@ module Gen_struct = struct
          ~fields_module
          ~make_module:A.mod_
          ~make_error:(fun error ->
-           pstr_extension ~loc (Location.Error.to_extension error) [])
+         pstr_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
   let fields_of_td (td : type_declaration) ~selection : structure =

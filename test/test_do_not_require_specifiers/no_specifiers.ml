@@ -30,7 +30,7 @@ include struct
          ; setter = Some set_y
          ; fset = (fun _r__ v__ -> { _r__ with y = v__ })
          }
-       : ([< `Read | `Set_and_create ], _, string list) Fieldslib.Field.t_with_perm)
+        : ([< `Read | `Set_and_create ], _, string list) Fieldslib.Field.t_with_perm)
     ;;
 
     let _ = y
@@ -44,7 +44,7 @@ include struct
          ; setter = None
          ; fset = (fun _r__ v__ -> { _r__ with x = v__ })
          }
-       : ([< `Read | `Set_and_create ], _, int) Fieldslib.Field.t_with_perm)
+        : ([< `Read | `Set_and_create ], _, int) Fieldslib.Field.t_with_perm)
     ;;
 
     let _ = x
@@ -123,7 +123,7 @@ include struct
       let set_all_mutable_fields _record__ ~y =
         let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
         _record__.y <- y
-      [@@inline always]
+        [@@inline always]
       ;;
 
       let _ = set_all_mutable_fields
