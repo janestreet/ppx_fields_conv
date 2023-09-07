@@ -16,39 +16,36 @@ let _ = Fieldslib.Field.fset Fields.a
 
 [%%expect
   {|
-Line _, characters *: (glob)
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Line _, characters _-_:
+Error: This expression has type
+         ([< `Read ], t, int) Fieldslib.Field.t_with_perm
+       but an expression was expected of type
+         ([> `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]
 
 let _ = Fieldslib.Field.setter Fields.a
 
 [%%expect
   {|
-Line _, characters *: (glob)
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Line _, characters _-_:
+Error: This expression has type
+         ([< `Read ], t, int) Fieldslib.Field.t_with_perm
+       but an expression was expected of type
+         ([> `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]
 
 let _ = (Fields.a :> (_, _) Fieldslib.Field.t)
 
 [%%expect
   {|
 Line _, characters _-_:
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Error: This expression cannot be coerced to type
+         ('a, 'b) Fieldslib.Field.t =
+           ([ `Read | `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm;
+       it has type ([< `Read ], t, int) Fieldslib.Field.t_with_perm
+       but is here used with type
+         ([> `Read | `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]
 
 (* Testing private in interfaces: *)
 module T : sig
@@ -60,48 +57,44 @@ end
 let _ = T.Fields.map
 
 [%%expect {|
-Line _, characters *: (glob)
-Error: Unbound value T.Fields.map
-|}]
+Line _, characters _-_:
+Error: Unbound value T.Fields.map |}]
 
 let _ = Fieldslib.Field.fset T.Fields.a
 
 [%%expect
   {|
-Line _, characters *: (glob)
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Line _, characters _-_:
+Error: This expression has type
+         (T.t, int) Fieldslib.Field.readonly_t =
+           ([ `Read ], T.t, int) Fieldslib.Field.t_with_perm
+       but an expression was expected of type
+         ([> `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]
 
 let _ = Fieldslib.Field.setter T.Fields.a
 
 [%%expect
   {|
-Line _, characters *: (glob)
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Line _, characters _-_:
+Error: This expression has type
+         (T.t, int) Fieldslib.Field.readonly_t =
+           ([ `Read ], T.t, int) Fieldslib.Field.t_with_perm
+       but an expression was expected of type
+         ([> `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]
 
 let _ = (T.Fields.a :> (_, _) Fieldslib.Field.t)
 
 [%%expect
   {|
-Line _, characters *: (glob)
-Error: * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       * (glob)
-       The first variant type does not allow tag(s) `Set_and_create
-|}]
+Line _, characters _-_:
+Error: This expression cannot be coerced to type
+         ('a, 'b) Fieldslib.Field.t =
+           ([ `Read | `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm;
+       it has type
+         (T.t, int) Fieldslib.Field.readonly_t =
+           ([ `Read ], T.t, int) Fieldslib.Field.t_with_perm
+       but is here used with type
+         ([> `Read | `Set_and_create ], 'a, 'b) Fieldslib.Field.t_with_perm
+       The first variant type does not allow tag(s) `Set_and_create |}]

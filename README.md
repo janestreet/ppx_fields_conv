@@ -4,10 +4,13 @@ ppx_fields_conv
 
 Generation of accessor and iteration functions for ocaml records.
 
-`ppx_fields_conv` is a ppx rewriter that can be used to define first
-class values representing record fields, and additional routines, to
-get and set record fields, iterate and fold over all fields of a
-record and create new record values.
+`ppx_fields_conv` is a ppx rewriter that can be used to define:
+
+* first-class values representing record fields
+* additional functions to:
+  - get and set record fields
+  - iterate and fold over all fields of a record
+  - create new record values
 
 # Basic Usage
 
@@ -54,6 +57,25 @@ except `Fields.fold_right` and `Direct_iterator.fold_right`. This behavior can b
 with the `-deriving-fields-require-selectors` command-line argument, which currently
 defaults to `false`. Passing `true` instead causes `[@@derving fields]` with no selectors
 to produce an error during preprocessing.
+
+## Implicitly-selected definitions
+
+The definitions of several of these functions depend on the `getters`, `setters`, and
+`fields` definitions. As a result, some of their dependencies might be derived in `*.ml`
+files, even if they were not explicitly indicated in the selector list. Specifically, in
+structures (and in the toplevel of `*.ml` files):
+
+- `[@@deriving fields ~fields]` also derives the functions under `~getters` and `~setters`
+- `[@@deriving fields ~iterators:_]` and `[@@deriving fields ~direct_iterators:_]` (for
+  any legal arguments to `iterators` and `direct_iterators`; see below) also derives
+  `~fields` (which transitively derives `~getters` and `~setters`)
+
+It's fine to use these "free" derived functions in the `*.ml`. However, to expose them in
+`*.mli`s, one must explicitly include them in the selector list, since
+`[@@deriving fields]`, when used in signatures, only derives declarations for exactly the
+requested functions (and not their dependencies).
+
+## Full list of selectors
 
 The full list of permitted selectors and the signatures of the corresponding functions
 follows:
@@ -245,11 +267,10 @@ end
 ```
 <!--END-->
 
-Use of `[@@deriving fields]` in an .mli will extend the signature for
-functions with the above types; In an .ml, definitions will be
-generated.
+Use of `[@@deriving fields]` in an `*.mli` will extend the signature for functions with
+the above types; In an `*.ml`, definitions will be generated.
 
-Field.t is defined in Fieldslib, including:
+`Field.t` is defined in `Fieldslib`, including:
 
 ```ocaml
 type ('perm, 'record, 'field) t_with_perm
