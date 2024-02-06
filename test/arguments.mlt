@@ -81,7 +81,8 @@ module _ = struct
   let _ = Fields.iter
 end
 
-[%%expect {|
+[%%expect
+  {|
 Line 81, characters 10-21:
 Error: Unbound module Fields
 |}]
@@ -97,8 +98,9 @@ struct
   let _ = M.Fields.iter
 end
 
-[%%expect {|
-Line 97, characters 10-23:
+[%%expect
+  {|
+Line 98, characters 10-23:
 Error: Unbound module M.Fields
 |}]
 
@@ -110,6 +112,6 @@ type t =
 
 [%%expect
   {|
-Line 105, characters 5-6:
+Line 107, characters 5-6:
 Error: [@deriving fields]: no definitions generated
 |}]

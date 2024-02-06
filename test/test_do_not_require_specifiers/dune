@@ -1,3 +1,5 @@
-(library (name fieldslib_test_do_not_require_specifiers)
+(library
+ (name fieldslib_test_do_not_require_specifiers)
  (libraries fieldslib)
- (preprocess (pps ppx_fields_conv -deriving-fields-require-selectors=false)))
+ (preprocess
+  (pps ppx_fields_conv -deriving-fields-require-selectors=false)))
