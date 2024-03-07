@@ -260,7 +260,7 @@ module Fields : sig
         -> cancelled:((t, bool            ) Field.t -> t -> bool             -> 'a)
         -> 'a list
 
-      val set_all_mutable_fields : t -> cancelled:bool -> unit
+      val set_all_mutable_fields : local_ t -> cancelled:bool -> unit
     end
 
 end
