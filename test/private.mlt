@@ -22,7 +22,7 @@ Error: This expression has type ([< `Read ], t, int) Base.Field.t_with_perm
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]
 
 let _ = Fieldslib.Field.setter Fields.a
 
@@ -33,7 +33,7 @@ Error: This expression has type ([< `Read ], t, int) Base.Field.t_with_perm
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]
 
 let _ = (Fields.a :> (_, _) Fieldslib.Field.t)
 
@@ -47,7 +47,7 @@ Error: This expression cannot be coerced to type
        but is here used with type
          ([> `Read | `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]
 
 (* Testing private in interfaces: *)
 module T : sig
@@ -61,7 +61,8 @@ let _ = T.Fields.map
 [%%expect
   {|
 Line _, characters _-_:
-Error: Unbound value T.Fields.map |}]
+Error: Unbound value T.Fields.map
+|}]
 
 let _ = Fieldslib.Field.fset T.Fields.a
 
@@ -74,7 +75,7 @@ Error: This expression has type
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]
 
 let _ = Fieldslib.Field.setter T.Fields.a
 
@@ -87,7 +88,7 @@ Error: This expression has type
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]
 
 let _ = (T.Fields.a :> (_, _) Fieldslib.Field.t)
 
@@ -103,4 +104,4 @@ Error: This expression cannot be coerced to type
        but is here used with type
          ([> `Read | `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
- |}]
+|}]

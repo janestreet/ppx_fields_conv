@@ -36,9 +36,7 @@ let () =
   Deriving.add "fields_clause" ~str_type_decl |> Deriving.ignore
 ;;
 
-[%%expect
-  {|
-|}]
+[%%expect {| |}]
 
 (** We write an extension to test our argument-construction.
 
@@ -113,9 +111,7 @@ let () =
   Driver.register_transformation ~extensions:[ extension ] "test_fields_clause"
 ;;
 
-[%%expect
-  {|
-|}]
+[%%expect {| |}]
 
 let () = expect := [ Per_field Fields ]
 
