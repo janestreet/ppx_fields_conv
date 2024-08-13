@@ -92,21 +92,21 @@ let () =
       Structure_item
       Ast_pattern.(pstr nil)
       (fun ~ctxt ->
-         let loc = Expansion_context.Extension.extension_point_loc ctxt in
-         let loc = { loc with loc_ghost = true } in
-         let fields = Selector.deriving_clause ~loc !expect |> Option.value_exn in
-         let fields_clause =
-           match fields with
-           | [%expr fields] -> [%expr fields_clause]
-           | { pexp_desc = Pexp_apply ([%expr fields], args); _ } ->
-             pexp_apply ~loc [%expr fields_clause] args
-           | _ -> assert false
-         in
-         let expr = estring ~loc (Pprintast.string_of_expression fields) in
-         [%str
-           type t [@@deriving [%e fields_clause]]
+        let loc = Expansion_context.Extension.extension_point_loc ctxt in
+        let loc = { loc with loc_ghost = true } in
+        let fields = Selector.deriving_clause ~loc !expect |> Option.value_exn in
+        let fields_clause =
+          match fields with
+          | [%expr fields] -> [%expr fields_clause]
+          | { pexp_desc = Pexp_apply ([%expr fields], args); _ } ->
+            pexp_apply ~loc [%expr fields_clause] args
+          | _ -> assert false
+        in
+        let expr = estring ~loc (Pprintast.string_of_expression fields) in
+        [%str
+          type t [@@deriving [%e fields_clause]]
 
-           let () = test [%e expr] selectors])
+          let () = test [%e expr] selectors])
   in
   Driver.register_transformation ~extensions:[ extension ] "test_fields_clause"
 ;;

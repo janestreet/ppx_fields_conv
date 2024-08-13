@@ -148,11 +148,11 @@ let of_string string =
 ;;
 
 include Sexpable.Of_stringable (struct
-  type nonrec t = t
+    type nonrec t = t
 
-  let of_string = of_string
-  let to_string = to_string
-end)
+    let of_string = of_string
+    let to_string = to_string
+  end)
 
 let compare = (Poly.compare : t -> t -> int)
 let equal = (Poly.equal : t -> t -> bool)
@@ -333,9 +333,9 @@ let deriving_clause ~loc list =
     let per_field, iterators, direct_iterators =
       List.dedup_and_sort list ~compare
       |> List.partition3_map ~f:(function
-           | Per_field x -> `Fst x
-           | Iterator x -> `Snd x
-           | Direct_iterator x -> `Trd x)
+        | Per_field x -> `Fst x
+        | Iterator x -> `Snd x
+        | Direct_iterator x -> `Trd x)
     in
     let per_field =
       List.map per_field ~f:(fun x ->

@@ -199,20 +199,22 @@ let%test_module "set_all_mutable_fields" =
 
 (* Sometimes it's convenient for the type of the accumulator to change as you handle
    the individual fields. *)
-module M (F1 : sig
-  type t =
-    { a : int
-    ; b : string
-    ; c : bool
-    }
-  [@@deriving fields ~iterators:(create, fold) ~direct_iterators:fold]
-end) (F2 : sig
-  type t =
-    { a : int
-    ; b : string
-    }
-  [@@deriving fields ~iterators:create]
-end) =
+module M
+    (F1 : sig
+       type t =
+         { a : int
+         ; b : string
+         ; c : bool
+         }
+       [@@deriving fields ~iterators:(create, fold) ~direct_iterators:fold]
+     end)
+    (F2 : sig
+       type t =
+         { a : int
+         ; b : string
+         }
+       [@@deriving fields ~iterators:create]
+     end) =
 struct
   let convert : F1.t -> F2.t =
     F1.Fields.Direct.fold

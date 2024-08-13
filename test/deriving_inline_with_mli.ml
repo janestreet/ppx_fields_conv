@@ -1,0 +1,1 @@
+include Deriving_inline_without_mli

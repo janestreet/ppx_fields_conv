@@ -1,8 +1,8 @@
 (library
  (name fieldslib_test)
- (libraries fieldslib ppx_fields_conv)
+ (libraries base fieldslib ppx_fields_conv)
  (preprocess
-  (pps ppx_fields_conv ppx_inline_test)))
+  (pps ppx_compare ppx_fields_conv ppx_inline_test)))
 
 (rule
  (targets example_from_doc.ml)

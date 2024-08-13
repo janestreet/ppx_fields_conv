@@ -10,11 +10,11 @@ include struct
   [@@@ocaml.warning "-60"]
 
   let _ = fun (_ : t) -> ()
-  let y _r__ = _r__.y
+  let y _r__ = _r__.y [@@zero_alloc]
   let _ = y
-  let set_y _r__ v__ = _r__.y <- v__
+  let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
   let _ = set_y
-  let x _r__ = _r__.x
+  let x _r__ = _r__.x [@@zero_alloc]
   let _ = x
 
   module Fields = struct
@@ -30,7 +30,7 @@ include struct
          ; setter = Some set_y
          ; fset = (fun _r__ v__ -> { _r__ with y = v__ })
          }
-        : ([< `Read | `Set_and_create ], _, string list) Fieldslib.Field.t_with_perm)
+       : ([< `Read | `Set_and_create ], _, string list) Fieldslib.Field.t_with_perm)
     ;;
 
     let _ = y
@@ -44,7 +44,7 @@ include struct
          ; setter = None
          ; fset = (fun _r__ v__ -> { _r__ with x = v__ })
          }
-        : ([< `Read | `Set_and_create ], _, int) Fieldslib.Field.t_with_perm)
+       : ([< `Read | `Set_and_create ], _, int) Fieldslib.Field.t_with_perm)
     ;;
 
     let _ = x
@@ -71,13 +71,13 @@ include struct
     ;;
 
     let _ = iter
-    let fold ~init:init__ ~x:x_fun__ ~y:y_fun__ = y_fun__ (x_fun__ init__ x) y
+    let fold ~init:init__ ~x:x_fun__ ~y:y_fun__ = y_fun__ (x_fun__ init__ x) y [@nontail]
     let _ = fold
     let map_poly record__ = [ record__.Fieldslib.Field.f x; record__.Fieldslib.Field.f y ]
     let _ = map_poly
-    let for_all ~x:x_fun__ ~y:y_fun__ = (true && x_fun__ x) && y_fun__ y
+    let for_all ~x:x_fun__ ~y:y_fun__ = (x_fun__ x && y_fun__ y) [@nontail]
     let _ = for_all
-    let exists ~x:x_fun__ ~y:y_fun__ = (false || x_fun__ x) || y_fun__ y
+    let exists ~x:x_fun__ ~y:y_fun__ = (x_fun__ x || y_fun__ y) [@nontail]
     let _ = exists
     let to_list ~x:x_fun__ ~y:y_fun__ = [ x_fun__ x; y_fun__ y ]
     let _ = to_list
@@ -91,19 +91,19 @@ include struct
       let _ = iter
 
       let fold record__ ~init:init__ ~x:x_fun__ ~y:y_fun__ =
-        y_fun__ (x_fun__ init__ x record__ record__.x) y record__ record__.y
+        y_fun__ (x_fun__ init__ x record__ record__.x) y record__ record__.y [@nontail]
       ;;
 
       let _ = fold
 
       let for_all record__ ~x:x_fun__ ~y:y_fun__ =
-        (true && x_fun__ x record__ record__.x) && y_fun__ y record__ record__.y
+        (x_fun__ x record__ record__.x && y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = for_all
 
       let exists record__ ~x:x_fun__ ~y:y_fun__ =
-        (false || x_fun__ x record__ record__.x) || y_fun__ y record__ record__.y
+        (x_fun__ x record__ record__.x || y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = exists
@@ -123,7 +123,7 @@ include struct
       let set_all_mutable_fields _record__ ~y =
         let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
         _record__.y <- y
-        [@@inline always]
+      [@@inline always] [@@zero_alloc]
       ;;
 
       let _ = set_all_mutable_fields

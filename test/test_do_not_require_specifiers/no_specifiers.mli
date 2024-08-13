@@ -9,9 +9,9 @@ type t =
 include sig
   [@@@ocaml.warning "-32-60"]
 
-  val y : t -> string list
-  val set_y : t -> string list -> unit
-  val x : t -> int
+  val y : t -> string list [@@zero_alloc arity 1]
+  val set_y : t -> string list -> unit [@@zero_alloc]
+  val x : t -> int [@@zero_alloc arity 1]
 
   module Fields : sig
     val names : string list
@@ -105,7 +105,7 @@ include sig
         -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> string list)
         -> t
 
-      val set_all_mutable_fields : t -> y:string list -> unit
+      val set_all_mutable_fields : t -> y:string list -> unit [@@zero_alloc]
     end
   end
 end
