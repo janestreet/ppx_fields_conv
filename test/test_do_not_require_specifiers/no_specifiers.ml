@@ -62,65 +62,81 @@ include struct
     let _ = make_creator
     let create ~x ~y = { x; y }
     let _ = create
-    let map ~x:x_fun__ ~y:y_fun__ = { x = x_fun__ x; y = y_fun__ y }
+    let map ~x:(local_ x_fun__) ~y:(local_ y_fun__) = { x = x_fun__ x; y = y_fun__ y }
     let _ = map
 
-    let iter ~x:x_fun__ ~y:y_fun__ =
+    let iter ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
       (x_fun__ x : unit);
       (y_fun__ y : unit)
     ;;
 
     let _ = iter
-    let fold ~init:init__ ~x:x_fun__ ~y:y_fun__ = y_fun__ (x_fun__ init__ x) y [@nontail]
+
+    let fold ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      y_fun__ (x_fun__ init__ x) y [@nontail]
+    ;;
+
     let _ = fold
-    let map_poly record__ = [ record__.Fieldslib.Field.f x; record__.Fieldslib.Field.f y ]
+
+    let map_poly (local_ record__) =
+      [ record__.Fieldslib.Field.f x; record__.Fieldslib.Field.f y ]
+    ;;
+
     let _ = map_poly
-    let for_all ~x:x_fun__ ~y:y_fun__ = (x_fun__ x && y_fun__ y) [@nontail]
+
+    let for_all ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      (x_fun__ x && y_fun__ y) [@nontail]
+    ;;
+
     let _ = for_all
-    let exists ~x:x_fun__ ~y:y_fun__ = (x_fun__ x || y_fun__ y) [@nontail]
+
+    let exists ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      (x_fun__ x || y_fun__ y) [@nontail]
+    ;;
+
     let _ = exists
-    let to_list ~x:x_fun__ ~y:y_fun__ = [ x_fun__ x; y_fun__ y ]
+    let to_list ~x:(local_ x_fun__) ~y:(local_ y_fun__) = [ x_fun__ x; y_fun__ y ]
     let _ = to_list
 
     module Direct = struct
-      let iter record__ ~x:x_fun__ ~y:y_fun__ =
+      let iter record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         x_fun__ x record__ record__.x;
         y_fun__ y record__ record__.y
       ;;
 
       let _ = iter
 
-      let fold record__ ~init:init__ ~x:x_fun__ ~y:y_fun__ =
+      let fold record__ ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         y_fun__ (x_fun__ init__ x record__ record__.x) y record__ record__.y [@nontail]
       ;;
 
       let _ = fold
 
-      let for_all record__ ~x:x_fun__ ~y:y_fun__ =
+      let for_all record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         (x_fun__ x record__ record__.x && y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = for_all
 
-      let exists record__ ~x:x_fun__ ~y:y_fun__ =
+      let exists record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         (x_fun__ x record__ record__.x || y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = exists
 
-      let to_list record__ ~x:x_fun__ ~y:y_fun__ =
+      let to_list record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         [ x_fun__ x record__ record__.x; y_fun__ y record__ record__.y ]
       ;;
 
       let _ = to_list
 
-      let map record__ ~x:x_fun__ ~y:y_fun__ =
+      let map record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         { x = x_fun__ x record__ record__.x; y = y_fun__ y record__ record__.y }
       ;;
 
       let _ = map
 
-      let set_all_mutable_fields _record__ ~y =
+      let set_all_mutable_fields (local_ _record__) ~y =
         let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
         _record__.y <- y
       [@@inline always] [@@zero_alloc]

@@ -135,13 +135,23 @@ module Everything = struct
       let create ~x ~y ~z ~f = { x; y; z; f }
       let _ = create
 
-      let map ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let map
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         { x = x_fun__ x; y = y_fun__ y; z = z_fun__ z; f = f_fun__ f }
       ;;
 
       let _ = map
 
-      let iter ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let iter
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         (x_fun__ x : unit);
         (y_fun__ y : unit);
         (z_fun__ z : unit);
@@ -150,13 +160,19 @@ module Everything = struct
 
       let _ = iter
 
-      let fold ~init:init__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let fold
+        ~init:init__
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         f_fun__ (z_fun__ (y_fun__ (x_fun__ init__ x) y) z) f [@nontail]
       ;;
 
       let _ = fold
 
-      let map_poly record__ =
+      let map_poly (local_ record__) =
         [ record__.Fieldslib.Field.f x
         ; record__.Fieldslib.Field.f y
         ; record__.Fieldslib.Field.f z
@@ -166,32 +182,59 @@ module Everything = struct
 
       let _ = map_poly
 
-      let for_all ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let for_all
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         (x_fun__ x && y_fun__ y && z_fun__ z && f_fun__ f) [@nontail]
       ;;
 
       let _ = for_all
 
-      let exists ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let exists
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         (x_fun__ x || y_fun__ y || z_fun__ z || f_fun__ f) [@nontail]
       ;;
 
       let _ = exists
 
-      let to_list ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+      let to_list
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        =
         [ x_fun__ x; y_fun__ y; z_fun__ z; f_fun__ f ]
       ;;
 
       let _ = to_list
 
-      let fold_right ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ ~init:init__ =
+      let fold_right
+        ~x:(local_ x_fun__)
+        ~y:(local_ y_fun__)
+        ~z:(local_ z_fun__)
+        ~f:(local_ f_fun__)
+        ~init:init__
+        =
         x_fun__ x (y_fun__ y (z_fun__ z (f_fun__ f init__))) [@nontail]
       ;;
 
       let _ = fold_right
 
       module Direct = struct
-        let iter record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let iter
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           x_fun__ x record__ record__.x;
           y_fun__ y record__ record__.y;
           z_fun__ z record__ record__.z;
@@ -200,7 +243,14 @@ module Everything = struct
 
         let _ = iter
 
-        let fold record__ ~init:init__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let fold
+          record__
+          ~init:init__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           f_fun__
             (z_fun__
                (y_fun__ (x_fun__ init__ x record__ record__.x) y record__ record__.y)
@@ -214,7 +264,13 @@ module Everything = struct
 
         let _ = fold
 
-        let for_all record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let for_all
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           (x_fun__ x record__ record__.x
            && y_fun__ y record__ record__.y
            && z_fun__ z record__ record__.z
@@ -223,7 +279,13 @@ module Everything = struct
 
         let _ = for_all
 
-        let exists record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let exists
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           (x_fun__ x record__ record__.x
            || y_fun__ y record__ record__.y
            || z_fun__ z record__ record__.z
@@ -232,7 +294,13 @@ module Everything = struct
 
         let _ = exists
 
-        let to_list record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let to_list
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           [ x_fun__ x record__ record__.x
           ; y_fun__ y record__ record__.y
           ; z_fun__ z record__ record__.z
@@ -242,7 +310,14 @@ module Everything = struct
 
         let _ = to_list
 
-        let fold_right record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ ~init:init__ =
+        let fold_right
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          ~init:init__
+          =
           x_fun__
             x
             record__
@@ -257,7 +332,13 @@ module Everything = struct
 
         let _ = fold_right
 
-        let map record__ ~x:x_fun__ ~y:y_fun__ ~z:z_fun__ ~f:f_fun__ =
+        let map
+          record__
+          ~x:(local_ x_fun__)
+          ~y:(local_ y_fun__)
+          ~z:(local_ z_fun__)
+          ~f:(local_ f_fun__)
+          =
           { x = x_fun__ x record__ record__.x
           ; y = y_fun__ y record__ record__.y
           ; z = z_fun__ z record__ record__.z
@@ -267,7 +348,7 @@ module Everything = struct
 
         let _ = map
 
-        let set_all_mutable_fields _record__ ~y =
+        let set_all_mutable_fields (local_ _record__) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always] [@@zero_alloc]

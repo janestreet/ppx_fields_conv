@@ -25,7 +25,7 @@ module All_floats : sig
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : t -> y:float -> unit
+        val set_all_mutable_fields : local_ t -> y:float -> unit
       end
     end
   end
@@ -50,7 +50,7 @@ module Not_all_float : sig
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : t -> y:float -> unit [@@zero_alloc]
+        val set_all_mutable_fields : local_ t -> y:float -> unit [@@zero_alloc]
       end
     end
   end
@@ -117,7 +117,7 @@ module All_float_dot_t : sig
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : t -> y:Float.t -> z:Float.Stable.V1.t -> unit
+        val set_all_mutable_fields : local_ t -> y:Float.t -> z:Float.Stable.V1.t -> unit
       end
     end
   end

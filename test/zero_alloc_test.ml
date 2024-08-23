@@ -57,7 +57,7 @@ module All_floats = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields _record__ ~y =
+        let set_all_mutable_fields (local_ _record__) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always]
@@ -119,7 +119,7 @@ module Not_all_float = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields _record__ ~y =
+        let set_all_mutable_fields (local_ _record__) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always] [@@zero_alloc]
@@ -240,7 +240,7 @@ module All_float_dot_t = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields _record__ ~y ~z =
+        let set_all_mutable_fields (local_ _record__) ~y ~z =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y;
           _record__.z <- z

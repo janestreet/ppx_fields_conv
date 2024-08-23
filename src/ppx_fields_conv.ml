@@ -127,48 +127,40 @@ module Create = struct
       None
   ;;
 
-  let string_of_mode mode =
-    match (mode : Ppxlib_jane.Ast_builder.Default.mode) with
-    | Local -> "local"
-  ;;
-
   let curry ~loc ty =
     match ty.ptyp_desc with
     | Ptyp_arrow _ -> [%type: [%t ty] [@extension.curry]] [@ocamlformat "disable"]
     | _ -> ty
   ;;
 
-  let with_mode ~mode pat =
-    match mode with
-    | None -> pat
-    | Some mode ->
+  let with_modes ~modes pat =
+    if List.is_empty modes
+    then pat
+    else
+      let open Ppxlib_jane.Shim in
       let module Mode_expr = Ppxlib_jane.Jane_syntax.Mode_expr in
-      let mode =
-        Mode_expr.singleton (Mode_expr.Const.mk (string_of_mode mode) pat.ppat_loc)
+      let mode_expr, attrs = Mode_expr.of_attrs pat.ppat_attributes in
+      let mode_expr =
+        List.fold_right modes ~init:mode_expr ~f:(fun (Mode mode_name) mode_expr ->
+          Mode_expr.concat
+            (Mode_expr.singleton (Mode_expr.Const.mk mode_name pat.ppat_loc))
+            mode_expr)
       in
-      let other, attrs = Mode_expr.maybe_of_attrs pat.ppat_attributes in
-      let mode =
-        match other with
-        | None -> mode
-        | Some other -> Mode_expr.concat mode other
-      in
-      let attrs = [ Option.to_list (Mode_expr.attr_of mode); attrs ] |> List.concat in
+      let attrs = Option.to_list (Mode_expr.attr_of mode_expr) @ attrs in
       { pat with ppat_attributes = attrs }
   ;;
 
-  let lambda ~loc ?mode patterns body =
+  let lambda ~loc ?(modes = []) patterns body =
     List.fold_right patterns ~init:body ~f:(fun (lab, pat) acc ->
-      let pat = with_mode ~mode pat in
+      let pat = with_modes ~modes pat in
       pexp_fun ~loc lab None pat acc)
   ;;
 
-  let lambda_sig ~loc ?mode arg_tys body_ty =
+  let lambda_sig ~loc ?(modes = []) arg_tys body_ty =
     Ppxlib_jane.Ast_builder.Default.tarrow_maybe
       ~loc
-      (List.map
-         arg_tys
-         ~f:(fun (lab, arg_ty) : Ppxlib_jane.Ast_builder.Default.arrow_argument ->
-           { arg_label = lab; arg_type = arg_ty; arg_mode = mode }))
+      (List.map arg_tys ~f:(fun (lab, arg_ty) : Ppxlib_jane.arrow_argument ->
+         { arg_label = lab; arg_type = arg_ty; arg_modes = modes }))
       body_ty
   ;;
 end
@@ -297,7 +289,7 @@ module Gen_sig = struct
     let init_ty = label_arg "init" (acc 0) in
     let t =
       acc (List.length labdecs)
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ init_ty ]
     in
     A.sig_item ~loc "fold" t
@@ -320,7 +312,7 @@ module Gen_sig = struct
     let init_ty = label_arg "init" (acc 0) in
     let t =
       acc (List.length labdecs)
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record; init_ty ]
     in
     A.sig_item ~loc "fold" t
@@ -344,7 +336,7 @@ module Gen_sig = struct
     let t =
       acc numlabs
       |> Create.lambda_sig ~loc [ init_ty ]
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
     in
     A.sig_item ~loc "fold_right" t
   ;;
@@ -372,7 +364,7 @@ module Gen_sig = struct
     let t =
       acc numlabs
       |> Create.lambda_sig ~loc [ init_ty ]
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
     A.sig_item ~loc "fold_right" t
@@ -384,7 +376,7 @@ module Gen_sig = struct
       field_arg ~loc ~private_ ~record (fun ~field ~ty:_ -> [%type: [%t field] -> bool])
     in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~mode:Local ~loc types [%type: bool] in
+    let t = Create.lambda_sig ~modes:[ Mode "local" ] ~loc types [%type: bool] in
     A.sig_item ~loc fun_name t
   ;;
 
@@ -397,7 +389,7 @@ module Gen_sig = struct
     let types = List.map labdecs ~f in
     let t =
       [%type: bool]
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
     A.sig_item ~loc fun_name t
@@ -409,7 +401,7 @@ module Gen_sig = struct
       field_arg ~loc ~private_ ~record (fun ~field ~ty:_ -> [%type: [%t field] -> unit])
     in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~mode:Local ~loc types [%type: unit] in
+    let t = Create.lambda_sig ~modes:[ Mode "local" ] ~loc types [%type: unit] in
     A.sig_item ~loc "iter" t
   ;;
 
@@ -422,7 +414,7 @@ module Gen_sig = struct
     let types = List.map labdecs ~f in
     let t =
       [%type: unit]
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
     A.sig_item ~loc "iter" t
@@ -435,7 +427,7 @@ module Gen_sig = struct
         [%type: [%t field] -> 'elem__])
     in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~mode:Local ~loc types [%type: 'elem__ list] in
+    let t = Create.lambda_sig ~modes:[ Mode "local" ] ~loc types [%type: 'elem__ list] in
     A.sig_item ~loc "to_list" t
   ;;
 
@@ -448,7 +440,7 @@ module Gen_sig = struct
     let types = List.map labdecs ~f in
     let t =
       [%type: 'elem__ list]
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
     A.sig_item ~loc "to_list" t
@@ -461,7 +453,7 @@ module Gen_sig = struct
         [%type: [%t field] -> [%t Create.curry ~loc field_ty]])
     in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~mode:Local ~loc types record in
+    let t = Create.lambda_sig ~modes:[ Mode "local" ] ~loc types record in
     A.sig_item ~loc "map" t
   ;;
 
@@ -475,7 +467,7 @@ module Gen_sig = struct
     let types = List.map labdecs ~f in
     let t =
       record
-      |> Create.lambda_sig ~mode:Local ~loc types
+      |> Create.lambda_sig ~modes:[ Mode "local" ] ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
     A.sig_item ~loc "map" t
@@ -499,11 +491,11 @@ module Gen_sig = struct
     let perm = perm ~loc private_ in
     let t =
       [%type:
-        [%t
-          ptyp_constr
-            ~loc
-            (Located.mk ~loc (Longident.parse "Fieldslib.Field.user"))
-            [ perm; record; fresh_variable ]]
+        local_ [%t
+                 ptyp_constr
+                   ~loc
+                   (Located.mk ~loc (Longident.parse "Fieldslib.Field.user"))
+                   [ perm; record; fresh_variable ]]
         -> [%t fresh_variable] list]
     in
     A.sig_item ~loc "map_poly" t
@@ -521,7 +513,11 @@ module Gen_sig = struct
       Option.some_if gen_zero_alloc_attrs (A.zero_alloc_attr ~arity:None ~loc)
       |> Option.to_list
     in
-    A.sig_item ~attrs ~loc "set_all_mutable_fields" [%type: [%t record] -> [%t labels]]
+    A.sig_item
+      ~attrs
+      ~loc
+      "set_all_mutable_fields"
+      [%type: local_ [%t record] -> [%t labels]]
   ;;
 
   let record
@@ -767,16 +763,16 @@ module Gen_struct = struct
     List.concat xss, ys
   ;;
 
-  let label_arg ?label ?mode ~loc name =
+  let label_arg ?label ?(modes = []) ~loc name =
     let l =
       match label with
       | None -> name
       | Some n -> n
     in
-    Labelled l, Create.with_mode ~mode (pvar ~loc name)
+    Labelled l, Create.with_modes ~modes (pvar ~loc name)
   ;;
 
-  let label_arg_fun ?mode ~loc name = label_arg ?mode ~label:name ~loc (name ^ "_fun__")
+  let label_arg_fun ?modes ~loc name = label_arg ?modes ~label:name ~loc (name ^ "_fun__")
   let nontail ~loc e = [%expr [%e e] [@nontail]]
 
   let creation_fun ~loc _record_name labdecs =
@@ -843,7 +839,7 @@ module Gen_struct = struct
         [%e evar ~loc (field_name ^ "_fun__")] [%e acc_expr] [%e evar ~loc field_name]]
     in
     let body = List.fold_left names ~init:[%expr init__] ~f:field_fold in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let init = label_arg ~label:"init" ~loc "init__" in
     let lambda = Create.lambda ~loc (init :: patterns) (nontail ~loc body) in
     A.str_item ~loc "fold" lambda
@@ -860,7 +856,7 @@ module Gen_struct = struct
           [%e pexp_field ~loc [%expr record__] (Located.lident ~loc field_name)]]
     in
     let body = List.fold_left names ~init:[%expr init__] ~f:field_fold in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let init = label_arg ~label:"init" ~loc "init__" in
     let lambda =
       Create.lambda
@@ -878,7 +874,7 @@ module Gen_struct = struct
         [%e evar ~loc (field_name ^ "_fun__")] [%e evar ~loc field_name] [%e acc_expr]]
     in
     let body = List.fold_right names ~f:field_fold_right ~init:[%expr init__] in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let init = label_arg ~label:"init" ~loc "init__" in
     let lambda = Create.lambda ~loc (patterns @ [ init ]) (nontail ~loc body) in
     A.str_item ~loc "fold_right" lambda
@@ -895,7 +891,7 @@ module Gen_struct = struct
           [%e acc_expr]]
     in
     let body = List.fold_right names ~f:field_fold_right ~init:[%expr init__] in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let init = label_arg ~label:"init" ~loc "init__" in
     let lambda =
       Create.lambda
@@ -923,7 +919,7 @@ module Gen_struct = struct
         [%expr [%e evar ~loc (field_name ^ "_fun__")] [%e evar ~loc field_name]])
       |> and_ ~loc
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc patterns (nontail ~loc body) in
     A.str_item ~loc "for_all" lambda
   ;;
@@ -939,7 +935,7 @@ module Gen_struct = struct
             [%e pexp_field ~loc [%expr record__] (Located.lident ~loc field_name)]])
       |> and_ ~loc
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda =
       Create.lambda ~loc ((Nolabel, [%pat? record__]) :: patterns) (nontail ~loc body)
     in
@@ -953,7 +949,7 @@ module Gen_struct = struct
         [%expr [%e evar ~loc (field_name ^ "_fun__")] [%e evar ~loc field_name]])
       |> or_ ~loc
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc patterns (nontail ~loc body) in
     A.str_item ~loc "exists" lambda
   ;;
@@ -969,7 +965,7 @@ module Gen_struct = struct
             [%e pexp_field ~loc [%expr record__] (Located.lident ~loc field_name)]])
       |> or_ ~loc
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda =
       Create.lambda ~loc ((Nolabel, [%pat? record__]) :: patterns) (nontail ~loc body)
     in
@@ -982,7 +978,7 @@ module Gen_struct = struct
       [%expr ([%e evar ~loc (field_name ^ "_fun__")] [%e evar ~loc field_name] : unit)]
     in
     let body = List.map names ~f:iter_field |> esequence ~loc in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc patterns body in
     A.str_item ~loc "iter" lambda
   ;;
@@ -997,7 +993,7 @@ module Gen_struct = struct
           [%e pexp_field ~loc [%expr record__] (Located.lident ~loc field_name)]]
     in
     let body = List.map names ~f:iter_field |> esequence ~loc in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc ((Nolabel, [%pat? record__]) :: patterns) body in
     A.str_item ~loc "iter" lambda
   ;;
@@ -1013,7 +1009,7 @@ module Gen_struct = struct
            in
            field_name, e))
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc patterns body in
     A.str_item ~loc "map" lambda
   ;;
@@ -1033,14 +1029,14 @@ module Gen_struct = struct
            in
            field_name, e))
     in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let lambda = Create.lambda ~loc ((Nolabel, [%pat? record__]) :: patterns) body in
     A.str_item ~loc "map" lambda
   ;;
 
   let to_list_fun ~loc labdecs =
     let names = Inspect.field_names labdecs in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let fold field_name tail =
       [%expr
         [%e evar ~loc (field_name ^ "_fun__")] [%e evar ~loc field_name] :: [%e tail]]
@@ -1052,7 +1048,7 @@ module Gen_struct = struct
 
   let direct_to_list_fun ~loc labdecs =
     let names = Inspect.field_names labdecs in
-    let patterns = List.map names ~f:(label_arg_fun ~loc ~mode:Local) in
+    let patterns = List.map names ~f:(label_arg_fun ~loc ~modes:[ Mode "local" ]) in
     let fold field_name tail =
       [%expr
         [%e evar ~loc (field_name ^ "_fun__")]
@@ -1079,7 +1075,7 @@ module Gen_struct = struct
          ~loc
          Nolabel
          None
-         (Create.with_mode ~mode:(Some Local) [%pat? record__])
+         (Create.with_modes ~modes:[ Mode "local" ] [%pat? record__])
          body)
   ;;
 
@@ -1124,7 +1120,7 @@ module Gen_struct = struct
         ~loc
         Nolabel
         None
-        (Create.with_mode ~mode:(Some Local) (pvar ~loc record_name))
+        (Create.with_modes ~modes:[ Mode "local" ] (pvar ~loc record_name))
         function_
     in
     let attrs =

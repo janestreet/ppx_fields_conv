@@ -20,8 +20,8 @@ include sig
 
     val fold
       :  init:'acc__0
-      -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
-      -> y:('acc__1 -> (t, string list) Fieldslib.Field.t -> 'acc__2)
+      -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
+      -> y:local_ ('acc__1 -> (t, string list) Fieldslib.Field.t -> 'acc__2)
       -> 'acc__2
 
     val make_creator
@@ -36,76 +36,82 @@ include sig
     val create : x:int -> y:string list -> t
 
     val map
-      :  x:((t, int) Fieldslib.Field.t -> int)
-      -> y:((t, string list) Fieldslib.Field.t -> string list)
+      :  x:local_ ((t, int) Fieldslib.Field.t -> int)
+      -> y:local_ ((t, string list) Fieldslib.Field.t -> string list)
       -> t
 
     val iter
-      :  x:((t, int) Fieldslib.Field.t -> unit)
-      -> y:((t, string list) Fieldslib.Field.t -> unit)
+      :  x:local_ ((t, int) Fieldslib.Field.t -> unit)
+      -> y:local_ ((t, string list) Fieldslib.Field.t -> unit)
       -> unit
 
     val for_all
-      :  x:((t, int) Fieldslib.Field.t -> bool)
-      -> y:((t, string list) Fieldslib.Field.t -> bool)
+      :  x:local_ ((t, int) Fieldslib.Field.t -> bool)
+      -> y:local_ ((t, string list) Fieldslib.Field.t -> bool)
       -> bool
 
     val exists
-      :  x:((t, int) Fieldslib.Field.t -> bool)
-      -> y:((t, string list) Fieldslib.Field.t -> bool)
+      :  x:local_ ((t, int) Fieldslib.Field.t -> bool)
+      -> y:local_ ((t, string list) Fieldslib.Field.t -> bool)
       -> bool
 
     val to_list
-      :  x:((t, int) Fieldslib.Field.t -> 'elem__)
-      -> y:((t, string list) Fieldslib.Field.t -> 'elem__)
+      :  x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
+      -> y:local_ ((t, string list) Fieldslib.Field.t -> 'elem__)
       -> 'elem__ list
 
-    val map_poly : ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
+    val map_poly
+      :  local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user
+      -> 'x0 list
 
     module Direct : sig
       val iter
         :  t
-        -> x:((t, int) Fieldslib.Field.t -> t -> int -> unit)
-        -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> unit)
+        -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> unit)
+        -> y:local_ ((t, string list) Fieldslib.Field.t -> t -> string list -> unit)
         -> unit
 
       val fold
         :  t
         -> init:'acc__0
-        -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
+        -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
         -> y:
-             ('acc__1
-              -> (t, string list) Fieldslib.Field.t
-              -> t
-              -> string list
-              -> 'acc__2)
+             local_ ('acc__1
+                     -> (t, string list) Fieldslib.Field.t
+                     -> t
+                     -> string list
+                     -> 'acc__2)
         -> 'acc__2
 
       val for_all
         :  t
-        -> x:((t, int) Fieldslib.Field.t -> t -> int -> bool)
-        -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> bool)
+        -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> bool)
+        -> y:local_ ((t, string list) Fieldslib.Field.t -> t -> string list -> bool)
         -> bool
 
       val exists
         :  t
-        -> x:((t, int) Fieldslib.Field.t -> t -> int -> bool)
-        -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> bool)
+        -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> bool)
+        -> y:local_ ((t, string list) Fieldslib.Field.t -> t -> string list -> bool)
         -> bool
 
       val to_list
         :  t
-        -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
-        -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> 'elem__)
+        -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
+        -> y:local_ ((t, string list) Fieldslib.Field.t -> t -> string list -> 'elem__)
         -> 'elem__ list
 
       val map
         :  t
-        -> x:((t, int) Fieldslib.Field.t -> t -> int -> int)
-        -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> string list)
+        -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> int)
+        -> y:
+             local_ ((t, string list) Fieldslib.Field.t
+                     -> t
+                     -> string list
+                     -> string list)
         -> t
 
-      val set_all_mutable_fields : t -> y:string list -> unit [@@zero_alloc]
+      val set_all_mutable_fields : local_ t -> y:string list -> unit [@@zero_alloc]
     end
   end
 end
