@@ -168,34 +168,32 @@ end = struct
   let _ = y
 end
 
-let%test_module "set_all_mutable_fields" =
-  (module struct
-    module M : sig
-      type 'a t =
-        { mutable a : int
-        ; b : string
-        ; mutable c : 'a
-        }
-      [@@deriving fields ~direct_iterators:set_all_mutable_fields]
-    end = struct
-      type 'a t =
-        { mutable a : int
-        ; b : string
-        ; mutable c : 'a
-        }
-      [@@deriving fields ~direct_iterators:set_all_mutable_fields]
-    end
+module%test [@name "set_all_mutable_fields"] _ = struct
+  module M : sig
+    type 'a t =
+      { mutable a : int
+      ; b : string
+      ; mutable c : 'a
+      }
+    [@@deriving fields ~direct_iterators:set_all_mutable_fields]
+  end = struct
+    type 'a t =
+      { mutable a : int
+      ; b : string
+      ; mutable c : 'a
+      }
+    [@@deriving fields ~direct_iterators:set_all_mutable_fields]
+  end
 
-    open M
+  open M
 
-    let%test_unit _ =
-      let t : _ t = { a = 0; b = ""; c = nan } in
-      let final_t : _ t = { a = 12; b = t.b; c = 12. } in
-      Fields.Direct.set_all_mutable_fields t ~a:final_t.a ~c:final_t.c;
-      assert (t = final_t)
-    ;;
-  end)
-;;
+  let%test_unit _ =
+    let t : _ t = { a = 0; b = ""; c = nan } in
+    let final_t : _ t = { a = 12; b = t.b; c = 12. } in
+    Fields.Direct.set_all_mutable_fields t ~a:final_t.a ~c:final_t.c;
+    assert (t = final_t)
+  ;;
+end
 
 (* Sometimes it's convenient for the type of the accumulator to change as you handle
    the individual fields. *)
