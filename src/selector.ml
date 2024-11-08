@@ -213,8 +213,13 @@ let select_id (type a) (module M : S with type t = a) ~arg_name ~f expr =
 
 let select_id_tuple m ~arg_name ~f expr =
   Result.bind
-    (match expr.pexp_desc with
-     | Pexp_tuple tuple -> Ok tuple
+    (match
+       Ppxlib_jane.Shim.Expression_desc.of_parsetree expr.pexp_desc ~loc:expr.pexp_loc
+     with
+     | Pexp_tuple labeled_exprs ->
+       (match Ppxlib_jane.as_unlabeled_tuple labeled_exprs with
+        | Some exprs -> Ok exprs
+        | None -> Error [ expr.pexp_loc, "does not accept labeled tuples" ])
      | Pexp_ident _ -> Ok [ expr ]
      | _ ->
        Error [ expr.pexp_loc, "expected a variable name or a tuple of variable names" ])
