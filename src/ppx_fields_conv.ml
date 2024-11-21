@@ -95,7 +95,7 @@ module A = struct
     psig_value ~loc { val_desc with pval_attributes = attrs }
   ;;
 
-  let sig_mod ~loc : string -> signature -> signature_item =
+  let sig_mod ~loc : string -> signature_item list -> signature_item =
     fun name signature ->
     psig_module
       ~loc
@@ -103,6 +103,10 @@ module A = struct
          ~loc
          ~name:(Located.mk ~loc (Some name))
          ~type_:(pmty_signature ~loc signature))
+  ;;
+
+  let sigitems_mod ~loc : string -> signature_item list -> signature_item =
+    fun name items -> sig_mod ~loc name items
   ;;
 
   let zero_alloc_attr ~arity ~loc =
@@ -467,8 +471,8 @@ module Gen_sig = struct
     let record = apply_type ~loc ~ty_name ~tps in
     let tps_names =
       List.map tps ~f:(fun tp ->
-        match tp.ptyp_desc with
-        | Ptyp_var var -> var
+        match Ppxlib_jane.Shim.Core_type_desc.of_parsetree tp.ptyp_desc with
+        | Ptyp_var (var, _) -> var
         | _ -> assert false)
     in
     let fresh_variable =
@@ -514,7 +518,7 @@ module Gen_sig = struct
     ~selection
     ~gen_zero_alloc_attrs
     (labdecs : label_declaration list)
-    : signature
+    : signature_item list
     =
     let fields =
       List.rev_map labdecs ~f:(fun labdec ->
@@ -624,12 +628,12 @@ module Gen_sig = struct
          ~loc
          ~selection
          ~fields_module
-         ~make_module:A.sig_mod
+         ~make_module:A.sigitems_mod
          ~make_error:(fun error ->
            psig_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
-  let fields_of_td (td : type_declaration) ~selection : signature =
+  let fields_of_td (td : type_declaration) ~selection : signature_item list =
     let { ptype_name = { txt = ty_name; loc }
         ; ptype_private = private_
         ; ptype_params

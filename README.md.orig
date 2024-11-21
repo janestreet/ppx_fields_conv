@@ -184,11 +184,11 @@ module Fields : sig
     -> bool
 
   val exists
-    :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> bool)
-    -> quantity  : local_ ((t, int             ) Field.t -> bool)
-    -> price     : local_ ((t, float           ) Field.t -> bool)
-    -> cancelled : local_ ((t, bool            ) Field.t -> bool)
-    -> bool
+        :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> bool)
+        -> quantity  : local_ ((t, int             ) Field.t -> bool)
+        -> price     : local_ ((t, float           ) Field.t -> bool)
+        -> cancelled : local_ ((t, bool            ) Field.t -> bool)
+        -> bool
 
   val to_list
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> 'a)
