@@ -10,18 +10,57 @@ include struct
   [@@@ocaml.warning "-60"]
 
   let _ = fun (_ : t) -> ()
-  let y _r__ = _r__.y [@@zero_alloc]
+
+  let (y @ portable) _r__ = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = y
-  let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+  let (y__local @ portable) (local_ _r__) = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = y__local
+
+  let (set_y @ portable) _r__ v__ = _r__.y <- v__
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = set_y
-  let x _r__ = _r__.x [@@zero_alloc]
+
+  let (x @ portable) _r__ = _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = x
 
+  let (x__local @ portable) (local_ _r__) = exclave_ _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = x__local
+
   module Fields = struct
-    let names = [ "x"; "y" ]
+    let names @ portable = [ "x"; "y" ]
     let _ = names
 
-    let y =
+    let y @ portable =
       (Fieldslib.Field.Field
          { Fieldslib.Field.For_generated_code.force_variance =
              (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -35,7 +74,7 @@ include struct
 
     let _ = y
 
-    let x =
+    let x @ portable =
       (Fieldslib.Field.Field
          { Fieldslib.Field.For_generated_code.force_variance =
              (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -49,7 +88,7 @@ include struct
 
     let _ = x
 
-    let make_creator ~x:x_fun__ ~y:y_fun__ compile_acc__ =
+    let (make_creator @ portable) ~x:x_fun__ ~y:y_fun__ compile_acc__ =
       let x_gen__, compile_acc__ = x_fun__ x compile_acc__ in
       let y_gen__, compile_acc__ = y_fun__ y compile_acc__ in
       ( (fun acc__ ->
@@ -60,86 +99,98 @@ include struct
     ;;
 
     let _ = make_creator
-    let create ~x ~y = { x; y }
+    let (create @ portable) ~x ~y = { x; y }
     let _ = create
-    let map ~x:(local_ x_fun__) ~y:(local_ y_fun__) = { x = x_fun__ x; y = y_fun__ y }
+
+    let (map @ portable) ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      { x = x_fun__ x; y = y_fun__ y }
+    ;;
+
     let _ = map
 
-    let iter ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+    let (iter @ portable) ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
       (x_fun__ x : unit);
       (y_fun__ y : unit)
     ;;
 
     let _ = iter
 
-    let fold ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+    let (fold @ portable) ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
       y_fun__ (x_fun__ init__ x) y [@nontail]
     ;;
 
     let _ = fold
 
-    let map_poly (local_ record__) =
+    let (map_poly @ portable) (local_ record__) =
       [ record__.Fieldslib.Field.f x; record__.Fieldslib.Field.f y ]
     ;;
 
     let _ = map_poly
 
-    let for_all ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+    let (for_all @ portable) ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
       (x_fun__ x && y_fun__ y) [@nontail]
     ;;
 
     let _ = for_all
 
-    let exists ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+    let (exists @ portable) ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
       (x_fun__ x || y_fun__ y) [@nontail]
     ;;
 
     let _ = exists
-    let to_list ~x:(local_ x_fun__) ~y:(local_ y_fun__) = [ x_fun__ x; y_fun__ y ]
+
+    let (to_list @ portable) ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      [ x_fun__ x; y_fun__ y ]
+    ;;
+
     let _ = to_list
 
     module Direct = struct
-      let iter record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (iter @ portable) record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         x_fun__ x record__ record__.x;
         y_fun__ y record__ record__.y
       ;;
 
       let _ = iter
 
-      let fold record__ ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (fold @ portable) record__ ~init:init__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         y_fun__ (x_fun__ init__ x record__ record__.x) y record__ record__.y [@nontail]
       ;;
 
       let _ = fold
 
-      let for_all record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (for_all @ portable) record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         (x_fun__ x record__ record__.x && y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = for_all
 
-      let exists record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (exists @ portable) record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         (x_fun__ x record__ record__.x || y_fun__ y record__ record__.y) [@nontail]
       ;;
 
       let _ = exists
 
-      let to_list record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (to_list @ portable) record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         [ x_fun__ x record__ record__.x; y_fun__ y record__ record__.y ]
       ;;
 
       let _ = to_list
 
-      let map record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
+      let (map @ portable) record__ ~x:(local_ x_fun__) ~y:(local_ y_fun__) =
         { x = x_fun__ x record__ record__.x; y = y_fun__ y record__ record__.y }
       ;;
 
       let _ = map
 
-      let set_all_mutable_fields (local_ _record__) ~y =
+      let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
         let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
         _record__.y <- y
-      [@@inline always] [@@zero_alloc]
+      [@@inline always]
+      [@@zero_alloc
+        custom_error_message
+          "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+           [@@deriving fields] tries to make by default."]
       ;;
 
       let _ = set_all_mutable_fields

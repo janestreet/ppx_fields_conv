@@ -20,15 +20,15 @@ module All_floats = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let y _r__ = _r__.y
+    let (y @ portable) _r__ = _r__.y
     let _ = y
-    let set_y _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) _r__ v__ = _r__.y <- v__
     let _ = set_y
-    let x _r__ = _r__.x
+    let (x @ portable) _r__ = _r__.x
     let _ = x
 
     module Fields = struct
-      let y =
+      let y @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -42,7 +42,7 @@ module All_floats = struct
 
       let _ = y
 
-      let x =
+      let x @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -57,7 +57,7 @@ module All_floats = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields (local_ _record__) ~y =
+        let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always]
@@ -82,15 +82,36 @@ module Not_all_float = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let y _r__ = _r__.y [@@zero_alloc]
+
+    let (y @ portable) _r__ = _r__.y
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = y
-    let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+    let (set_y @ portable) _r__ v__ = _r__.y <- v__
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = set_y
-    let x _r__ = _r__.x [@@zero_alloc]
+
+    let (x @ portable) _r__ = _r__.x
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = x
 
     module Fields = struct
-      let y =
+      let y @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -104,7 +125,7 @@ module Not_all_float = struct
 
       let _ = y
 
-      let x =
+      let x @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -119,10 +140,14 @@ module Not_all_float = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields (local_ _record__) ~y =
+        let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
-        [@@inline always] [@@zero_alloc]
+        [@@inline always]
+        [@@zero_alloc
+          custom_error_message
+            "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
+             that [@@deriving fields] tries to make by default."]
         ;;
 
         let _ = set_all_mutable_fields
@@ -141,11 +166,11 @@ module Manually_disable = struct
   [@@deriving_inline fields ~getters ~setters] [@@fields.no_zero_alloc]
 
   let _ = fun (_ : t) -> ()
-  let y _r__ = _r__.y
+  let (y @ portable) _r__ = _r__.y
   let _ = y
-  let set_y _r__ v__ = _r__.y <- v__
+  let (set_y @ portable) _r__ v__ = _r__.y <- v__
   let _ = set_y
-  let x _r__ = _r__.x
+  let (x @ portable) _r__ = _r__.x
   let _ = x
 
   [@@@end]
@@ -159,11 +184,32 @@ module With_arrow_fields = struct
   [@@deriving_inline fields ~getters ~setters]
 
   let _ = fun (_ : t) -> ()
-  let y _r__ = _r__.y [@@zero_alloc]
+
+  let (y @ portable) _r__ = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = y
-  let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+  let (set_y @ portable) _r__ v__ = _r__.y <- v__
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = set_y
-  let x _r__ = _r__.x [@@zero_alloc]
+
+  let (x @ portable) _r__ = _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = x
 
   [@@@end]
@@ -182,19 +228,19 @@ module All_float_dot_t = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let z _r__ = _r__.z
+    let (z @ portable) _r__ = _r__.z
     let _ = z
-    let set_z _r__ v__ = _r__.z <- v__
+    let (set_z @ portable) _r__ v__ = _r__.z <- v__
     let _ = set_z
-    let y _r__ = _r__.y
+    let (y @ portable) _r__ = _r__.y
     let _ = y
-    let set_y _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) _r__ v__ = _r__.y <- v__
     let _ = set_y
-    let x _r__ = _r__.x
+    let (x @ portable) _r__ = _r__.x
     let _ = x
 
     module Fields = struct
-      let z =
+      let z @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -211,7 +257,7 @@ module All_float_dot_t = struct
 
       let _ = z
 
-      let y =
+      let y @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -225,7 +271,7 @@ module All_float_dot_t = struct
 
       let _ = y
 
-      let x =
+      let x @ portable =
         (Fieldslib.Field.Field
            { Fieldslib.Field.For_generated_code.force_variance =
                (fun (_ : [< `Read | `Set_and_create ]) -> ())
@@ -240,7 +286,7 @@ module All_float_dot_t = struct
       let _ = x
 
       module Direct = struct
-        let set_all_mutable_fields (local_ _record__) ~y ~z =
+        let (set_all_mutable_fields @ portable) (local_ _record__) ~y ~z =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y;
           _record__.z <- z

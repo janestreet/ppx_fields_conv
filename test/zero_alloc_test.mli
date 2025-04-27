@@ -19,13 +19,13 @@ module All_floats : sig
   include sig
     [@@@ocaml.warning "-32-60"]
 
-    val y : t -> float
-    val set_y : t -> float -> unit
-    val x : t -> float
+    val y : t -> float @@ portable
+    val set_y : t -> float -> unit @@ portable
+    val x : t -> float @@ portable
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : local_ t -> y:float -> unit
+        val set_all_mutable_fields : local_ t -> y:float -> unit @@ portable
       end
     end
   end
@@ -44,13 +44,35 @@ module Not_all_float : sig
   include sig
     [@@@ocaml.warning "-32-60"]
 
-    val y : t -> float [@@zero_alloc arity 1]
-    val set_y : t -> float -> unit [@@zero_alloc]
-    val x : t -> int [@@zero_alloc arity 1]
+    val y : t -> float @@ portable
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val set_y : t -> float -> unit @@ portable
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x : t -> int @@ portable
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : local_ t -> y:float -> unit [@@zero_alloc]
+        val set_all_mutable_fields : local_ t -> y:float -> unit @@ portable
+        [@@zero_alloc
+          custom_error_message
+            "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
+             that [@@deriving fields] tries to make by default."]
       end
     end
   end
@@ -69,9 +91,9 @@ module Manually_disable : sig
   include sig
     [@@@ocaml.warning "-32"]
 
-    val y : t -> float
-    val set_y : t -> float -> unit
-    val x : t -> int
+    val y : t -> float @@ portable
+    val set_y : t -> float -> unit @@ portable
+    val x : t -> int @@ portable
   end
   [@@ocaml.doc "@inline"]
 
@@ -88,9 +110,27 @@ module With_arrow_fields : sig
   include sig
     [@@@ocaml.warning "-32"]
 
-    val y : t -> int -> int -> float [@@zero_alloc arity 1]
-    val set_y : t -> (int -> int -> float) -> unit [@@zero_alloc]
-    val x : t -> int [@@zero_alloc arity 1]
+    val y : t -> int -> int -> float @@ portable
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val set_y : t -> (int -> int -> float) -> unit @@ portable
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x : t -> int @@ portable
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
   end
   [@@ocaml.doc "@inline"]
 
@@ -109,15 +149,20 @@ module All_float_dot_t : sig
   include sig
     [@@@ocaml.warning "-32-60"]
 
-    val z : t -> Float.Stable.V1.t
-    val set_z : t -> Float.Stable.V1.t -> unit
-    val y : t -> Float.t
-    val set_y : t -> Float.t -> unit
-    val x : t -> float
+    val z : t -> Float.Stable.V1.t @@ portable
+    val set_z : t -> Float.Stable.V1.t -> unit @@ portable
+    val y : t -> Float.t @@ portable
+    val set_y : t -> Float.t -> unit @@ portable
+    val x : t -> float @@ portable
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : local_ t -> y:Float.t -> z:Float.Stable.V1.t -> unit
+        val set_all_mutable_fields
+          :  local_ t
+          -> y:Float.t
+          -> z:Float.Stable.V1.t
+          -> unit
+          @@ portable
       end
     end
   end

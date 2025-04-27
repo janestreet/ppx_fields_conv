@@ -3,6 +3,7 @@ open Ppxlib
 
 module Per_field : sig
   type t =
+    | Local_getters
     | Getters
     | Setters
     | Names
