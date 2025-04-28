@@ -1,0 +1,60 @@
+module My_float : sig
+  type t = private float
+end = struct
+  type t = float
+end
+
+type t =
+  { my_float : My_float.t
+  ; float : float
+  }
+[@@deriving fields ~getters]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: allocation of 16 bytes for float
+Line _, characters _-_:
+Error: Annotation check for zero_alloc failed on function TOP2.my_float (camlTOP2__my_float_2_5_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+
+Line _, characters _-_:
+Error: allocation of 16 bytes for float
+
+Line _, characters _-_:
+Error: Annotation check for zero_alloc failed on function TOP2.float (camlTOP2__float_1_4_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+|}]
+
+module M : sig
+  type t =
+    { my_float : My_float.t
+    ; float : float
+    }
+  [@@deriving fields ~getters]
+end = struct
+  type t =
+    { my_float : My_float.t
+    ; float : float
+    }
+
+  let my_float t = t.my_float
+  let float t = t.float
+end
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: allocation of 16 bytes for float
+
+Line _, characters _-_:
+Error: Annotation check for zero_alloc failed on function TOP3.M.my_float (camlTOP3__my_float_6_8_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+
+Line _, characters _-_:
+Error: allocation of 16 bytes for float
+
+Line _, characters _-_:
+Error: Annotation check for zero_alloc failed on function TOP3.M.float (camlTOP3__float_7_9_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+|}]

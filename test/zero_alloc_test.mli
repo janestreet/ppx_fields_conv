@@ -44,13 +44,35 @@ module Not_all_float : sig
   include sig
     [@@@ocaml.warning "-32-60"]
 
-    val y : t -> float [@@zero_alloc arity 1]
-    val set_y : t -> float -> unit [@@zero_alloc]
-    val x : t -> int [@@zero_alloc arity 1]
+    val y : t -> float
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val set_y : t -> float -> unit
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x : t -> int
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : t -> y:float -> unit [@@zero_alloc]
+        val set_all_mutable_fields : t -> y:float -> unit
+        [@@zero_alloc
+          custom_error_message
+            "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
+             that [@@deriving fields] tries to make by default."]
       end
     end
   end
@@ -88,9 +110,27 @@ module With_arrow_fields : sig
   include sig
     [@@@ocaml.warning "-32"]
 
-    val y : t -> int -> int -> float [@@zero_alloc arity 1]
-    val set_y : t -> (int -> int -> float) -> unit [@@zero_alloc]
-    val x : t -> int [@@zero_alloc arity 1]
+    val y : t -> int -> int -> float
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val set_y : t -> (int -> int -> float) -> unit
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x : t -> int
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
   end
   [@@ocaml.doc "@inline"]
 

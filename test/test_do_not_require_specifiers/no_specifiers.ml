@@ -10,12 +10,51 @@ include struct
   [@@@ocaml.warning "-60"]
 
   let _ = fun (_ : t) -> ()
-  let y _r__ = _r__.y [@@zero_alloc]
+
+  let y _r__ = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = y
-  let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+  let y__local _r__ = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = y__local
+
+  let set_y _r__ v__ = _r__.y <- v__
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = set_y
-  let x _r__ = _r__.x [@@zero_alloc]
+
+  let x _r__ = _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = x
+
+  let x__local _r__ = _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = x__local
 
   module Fields = struct
     let names = [ "x"; "y" ]
@@ -123,7 +162,11 @@ include struct
       let set_all_mutable_fields _record__ ~y =
         let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
         _record__.y <- y
-      [@@inline always] [@@zero_alloc]
+      [@@inline always]
+      [@@zero_alloc
+        custom_error_message
+          "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+           [@@deriving fields] tries to make by default."]
       ;;
 
       let _ = set_all_mutable_fields

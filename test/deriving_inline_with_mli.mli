@@ -8,7 +8,60 @@ module One_thing : sig
   include sig
     [@@@ocaml.warning "-32"]
 
-    val set_y : t -> bool -> unit [@@zero_alloc]
+    val set_y : t -> bool -> unit
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+  end
+  [@@ocaml.doc "@inline"]
+
+  [@@@end]
+end
+
+module Local_getters : sig
+  type t =
+    { w : string [@globalized]
+    ; x : int
+    ; mutable y : bool
+    ; z : float
+    }
+  [@@deriving_inline fields ~local_getters]
+
+  include sig
+    [@@@ocaml.warning "-32"]
+
+    val z__local : t -> float
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val y__local : t -> bool
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x__local : t -> int
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val w__local : t -> string
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
   end
   [@@ocaml.doc "@inline"]
 
@@ -46,11 +99,43 @@ module Everything : sig
   include sig
     [@@@ocaml.warning "-32-60"]
 
-    val f : t -> string -> string [@@zero_alloc arity 1]
-    val z : t -> float [@@zero_alloc arity 1]
-    val y : t -> bool [@@zero_alloc arity 1]
-    val set_y : t -> bool -> unit [@@zero_alloc]
-    val x : t -> int [@@zero_alloc arity 1]
+    val f : t -> string -> string
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val z : t -> float
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val y : t -> bool
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val set_y : t -> bool -> unit
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+
+    val x : t -> int
+    [@@zero_alloc
+      arity
+        1
+        custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
 
     module Fields : sig
       val names : string list
@@ -217,7 +302,11 @@ module Everything : sig
                 -> string)
           -> t
 
-        val set_all_mutable_fields : t -> y:bool -> unit [@@zero_alloc]
+        val set_all_mutable_fields : t -> y:bool -> unit
+        [@@zero_alloc
+          custom_error_message
+            "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
+             that [@@deriving fields] tries to make by default."]
       end
     end
   end

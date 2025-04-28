@@ -8,8 +8,65 @@ module One_thing = struct
   [@@deriving_inline fields ~setters]
 
   let _ = fun (_ : t) -> ()
-  let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+  let set_y _r__ v__ = _r__.y <- v__
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
   let _ = set_y
+
+  [@@@end]
+end
+
+module Local_getters = struct
+  type t =
+    { w : string [@globalized]
+    ; x : int
+    ; mutable y : bool
+    ; z : float
+    }
+  [@@deriving_inline fields ~local_getters]
+
+  let _ = fun (_ : t) -> ()
+
+  let z__local _r__ = _r__.z
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = z__local
+
+  let y__local _r__ = _r__.y
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = y__local
+
+  let x__local _r__ = _r__.x
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = x__local
+
+  let w__local _r__ = _r__.w
+  [@@zero_alloc
+    custom_error_message
+      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+       [@@deriving fields] tries to make by default."]
+  ;;
+
+  let _ = w__local
 
   [@@@end]
 end
@@ -46,15 +103,50 @@ module Everything = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let f _r__ = _r__.f [@@zero_alloc]
+
+    let f _r__ = _r__.f
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = f
-    let z _r__ = _r__.z [@@zero_alloc]
+
+    let z _r__ = _r__.z
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = z
-    let y _r__ = _r__.y [@@zero_alloc]
+
+    let y _r__ = _r__.y
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = y
-    let set_y _r__ v__ = _r__.y <- v__ [@@zero_alloc]
+
+    let set_y _r__ v__ = _r__.y <- v__
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = set_y
-    let x _r__ = _r__.x [@@zero_alloc]
+
+    let x _r__ = _r__.x
+    [@@zero_alloc
+      custom_error_message
+        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
+         [@@deriving fields] tries to make by default."]
+    ;;
+
     let _ = x
 
     module Fields = struct
@@ -218,7 +310,8 @@ module Everything = struct
           (x_fun__ x record__ record__.x
            && y_fun__ y record__ record__.y
            && z_fun__ z record__ record__.z
-           && f_fun__ f record__ record__.f) [@nontail]
+           && f_fun__ f record__ record__.f)
+          [@nontail]
         ;;
 
         let _ = for_all
@@ -227,7 +320,8 @@ module Everything = struct
           (x_fun__ x record__ record__.x
            || y_fun__ y record__ record__.y
            || z_fun__ z record__ record__.z
-           || f_fun__ f record__ record__.f) [@nontail]
+           || f_fun__ f record__ record__.f)
+          [@nontail]
         ;;
 
         let _ = exists
@@ -270,7 +364,11 @@ module Everything = struct
         let set_all_mutable_fields _record__ ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
-        [@@inline always] [@@zero_alloc]
+        [@@inline always]
+        [@@zero_alloc
+          custom_error_message
+            "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
+             that [@@deriving fields] tries to make by default."]
         ;;
 
         let _ = set_all_mutable_fields

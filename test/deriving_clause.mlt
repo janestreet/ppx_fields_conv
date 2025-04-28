@@ -18,8 +18,7 @@ module Selector = Ppx_fields_conv.Selector
     ]}
 
     where [<selectors>] are the selectors that [@@deriving fields] would use if given the
-    same [<args>.]
-*)
+    same [<args>.] *)
 
 let () =
   let str_type_decl =
@@ -59,9 +58,8 @@ let () =
       test "fields_clause ... <args> ..." selectors
     ]}
 
-    This tests that the selectors list in [expect] round-trips through [[@@deriving
-    fields_clause]] to produce the same selectors at the end.
-*)
+    This tests that the selectors list in [expect] round-trips through
+    [[@@deriving fields_clause]] to produce the same selectors at the end. *)
 
 let expect = ref []
 
@@ -149,17 +147,17 @@ let () = expect := Selector.all
   {|
 (Ok
  (deriving
-   "fields ~getters ~setters ~names ~fields\
+   "fields ~local_getters ~getters ~setters ~names ~fields\
   \n  ~iterators:(create, make_creator, exists, fold, fold_right, for_all, iter,\
   \n               map, to_list, map_poly)\
   \n  ~direct_iterators:(exists, fold, fold_right, for_all, iter, map, to_list,\
   \n                      set_all_mutable_fields)")
  (selectors
-  (~getters ~setters ~names ~fields ~iterators:create ~iterators:make_creator
-   ~iterators:exists ~iterators:fold ~iterators:fold_right ~iterators:for_all
-   ~iterators:iter ~iterators:map ~iterators:to_list ~iterators:map_poly
-   ~direct_iterators:exists ~direct_iterators:fold
-   ~direct_iterators:fold_right ~direct_iterators:for_all
-   ~direct_iterators:iter ~direct_iterators:map ~direct_iterators:to_list
-   ~direct_iterators:set_all_mutable_fields)))
+  (~local_getters ~getters ~setters ~names ~fields ~iterators:create
+   ~iterators:make_creator ~iterators:exists ~iterators:fold
+   ~iterators:fold_right ~iterators:for_all ~iterators:iter ~iterators:map
+   ~iterators:to_list ~iterators:map_poly ~direct_iterators:exists
+   ~direct_iterators:fold ~direct_iterators:fold_right
+   ~direct_iterators:for_all ~direct_iterators:iter ~direct_iterators:map
+   ~direct_iterators:to_list ~direct_iterators:set_all_mutable_fields)))
 |}]

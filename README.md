@@ -29,10 +29,10 @@ type t = {
 Which produces functions with the following signatures:
 
 ```ocaml
-val cancelled : t -> bool
-val price     : t -> float
-val quantity  : t -> int
-val dir       : t -> [ `Buy | `Sell ]
+val cancelled : t -> bool @@ portable
+val price     : t -> float @@ portable
+val quantity  : t -> int @@ portable
+val dir       : t -> [ `Buy | `Sell ] @@ portable
 ```
 
 # Selecting definitions
@@ -90,6 +90,7 @@ type t = {
 } [@@deriving
     fields
       ~getters
+      ~local_getters
       ~setters
       ~names
       ~fields
@@ -109,28 +110,36 @@ type t = {
 ```
 <!--END-->
 
-then code will be generated for functions of the following type:
+then code will be generated for functions of the following type (note that the `@@
+portable` annotations are for OxCaml only, and are converted to ignored attributes in
+regular OCaml):
 
 <!--BEGIN generated_sig-->
 ```ocaml
 (* getters *)
-val cancelled : t -> bool [@@zero_alloc]
-val price     : t -> float [@@zero_alloc]
-val quantity  : t -> int [@@zero_alloc]
-val dir       : t -> [ `Buy | `Sell ] [@@zero_alloc]
+val cancelled : t -> bool @@ portable [@@zero_alloc]
+val price     : t -> float @@ portable [@@zero_alloc]
+val quantity  : t -> int @@ portable [@@zero_alloc]
+val dir       : t -> [ `Buy | `Sell ] @@ portable [@@zero_alloc]
+
+(* local getters *)
+val cancelled__local : local_ t -> bool @@ portable [@@zero_alloc]
+val price__local     : local_ t -> local_ float @@ portable [@@zero_alloc]
+val quantity__local  : local_ t -> local_ int @@ portable [@@zero_alloc]
+val dir__local       : local_ t -> local_ [ `Buy | `Sell ] @@ portable [@@zero_alloc]
 
 (* setters *)
-val set_cancelled : t -> bool -> unit [@@zero_alloc]
+val set_cancelled : t -> bool -> unit @@ portable [@@zero_alloc]
 
 (* higher order fields and functions over all fields *)
 module Fields : sig
 
-  val names : string list
+  val names : string list @@ portable
 
-  val cancelled : (t, bool            ) Field.t
-  val price     : (t, float           ) Field.t
-  val quantity  : (t, int             ) Field.t
-  val dir       : (t, [ `Buy | `Sell ]) Field.t
+  val cancelled : (t, bool            ) Field.t @@ portable
+  val price     : (t, float           ) Field.t @@ portable
+  val quantity  : (t, int             ) Field.t @@ portable
+  val dir       : (t, [ `Buy | `Sell ]) Field.t @@ portable
 
   val create
     :  dir       : [ `Buy | `Sell ]
@@ -138,6 +147,7 @@ module Fields : sig
     -> price     : float
     -> cancelled : bool
     -> t
+    @@ portable
 
   val make_creator
     :  dir       : ((t, [ `Buy | `Sell ]) Field.t -> 'a -> ('arg -> [ `Buy | `Sell ]) * 'b)
@@ -145,6 +155,7 @@ module Fields : sig
     -> price     : ((t, float           ) Field.t -> 'c -> ('arg -> float           ) * 'd)
     -> cancelled : ((t, bool            ) Field.t -> 'd -> ('arg -> bool            ) * 'e)
     -> 'a -> ('arg -> t) * 'e
+    @@ portable
 
   val fold
     :  init      : 'a
@@ -153,6 +164,7 @@ module Fields : sig
     -> price     : local_ ('c -> (t, float           ) Field.t -> 'd)
     -> cancelled : local_ ('d -> (t, bool            ) Field.t -> 'e)
     -> 'e
+    @@ portable
 
   val fold_right
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> 'd -> 'e)
@@ -161,6 +173,7 @@ module Fields : sig
     -> cancelled : local_ ((t, bool            ) Field.t -> 'a -> 'b)
     -> init      : 'a
     -> 'e
+    @@ portable
 
   val map
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> [ `Buy | `Sell ])
@@ -168,6 +181,7 @@ module Fields : sig
     -> price     : local_ ((t, float           ) Field.t -> float)
     -> cancelled : local_ ((t, bool            ) Field.t -> bool)
     -> t
+    @@ portable
 
   val iter
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> unit)
@@ -175,6 +189,7 @@ module Fields : sig
     -> price     : local_ ((t, float           ) Field.t -> unit)
     -> cancelled : local_ ((t, bool            ) Field.t -> unit)
     -> unit
+    @@ portable
 
   val for_all
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> bool)
@@ -182,13 +197,15 @@ module Fields : sig
     -> price     : local_ ((t, float           ) Field.t -> bool)
     -> cancelled : local_ ((t, bool            ) Field.t -> bool)
     -> bool
+    @@ portable
 
   val exists
-        :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> bool)
-        -> quantity  : local_ ((t, int             ) Field.t -> bool)
-        -> price     : local_ ((t, float           ) Field.t -> bool)
-        -> cancelled : local_ ((t, bool            ) Field.t -> bool)
-        -> bool
+    :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> bool)
+    -> quantity  : local_ ((t, int             ) Field.t -> bool)
+    -> price     : local_ ((t, float           ) Field.t -> bool)
+    -> cancelled : local_ ((t, bool            ) Field.t -> bool)
+    -> bool
+    @@ portable
 
   val to_list
     :  dir       : local_ ((t, [ `Buy | `Sell ]) Field.t -> 'a)
@@ -196,8 +213,9 @@ module Fields : sig
     -> price     : local_ ((t, float           ) Field.t -> 'a)
     -> cancelled : local_ ((t, bool            ) Field.t -> 'a)
     -> 'a list
+  @@ portable
 
-  val map_poly : local_ ([< `Read | `Set_and_create ], t, 'a) Field.user -> 'a list
+  val map_poly : local_ ([< `Read | `Set_and_create ], t, 'a) Field.user -> 'a list @@ portable
 
   (** Functions that take a record directly *)
   module Direct : sig
@@ -210,6 +228,7 @@ module Fields : sig
         -> price     : local_ ('c -> (t, float           ) Field.t -> t -> float            -> 'd)
         -> cancelled : local_ ('d -> (t, bool            ) Field.t -> t -> bool             -> 'e)
         -> 'e
+        @@ portable
 
       val fold_right
         :  t
@@ -219,6 +238,7 @@ module Fields : sig
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> 'a -> 'b)
         -> init:'a
         -> 'e
+        @@ portable
 
       val map
         :  t
@@ -227,6 +247,7 @@ module Fields : sig
         -> price     : local_ ((t, float           ) Field.t -> t -> float            -> float)
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> bool)
         -> t
+        @@ portable
 
       val iter
         :  t
@@ -235,6 +256,7 @@ module Fields : sig
         -> price     : local_ ((t, float           ) Field.t -> t -> float            -> unit)
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> unit)
         -> unit
+        @@ portable
 
       val for_all
         :  t
@@ -243,6 +265,7 @@ module Fields : sig
         -> price     : local_ ((t, float           ) Field.t -> t -> float            -> bool)
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> bool)
         -> bool
+        @@ portable
 
       val exists
         :  t
@@ -251,6 +274,7 @@ module Fields : sig
         -> price     : local_ ((t, float           ) Field.t -> t -> float            -> bool)
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> bool)
         -> bool
+        @@ portable
 
       val to_list
         :  t
@@ -259,8 +283,9 @@ module Fields : sig
         -> price     : local_ ((t, float           ) Field.t -> t -> float            -> 'a)
         -> cancelled : local_ ((t, bool            ) Field.t -> t -> bool             -> 'a)
         -> 'a list
+        @@ portable
 
-      val set_all_mutable_fields : local_ t -> cancelled:bool -> unit [@@zero_alloc]
+      val set_all_mutable_fields : local_ t -> cancelled:bool -> unit @@ portable [@@zero_alloc]
     end
 
 end
