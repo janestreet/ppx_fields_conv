@@ -145,7 +145,8 @@ module Everything : sig
       val x : (t, int) Fieldslib.Field.t @@ portable
 
       val fold
-        :  init:'acc__0
+        : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        init:'acc__0
         -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
         -> y:local_ ('acc__1 -> (t, bool) Fieldslib.Field.t -> 'acc__2)
         -> z:local_ ('acc__2 -> (t, float) Fieldslib.Field.t -> 'acc__3)
@@ -154,7 +155,8 @@ module Everything : sig
         @@ portable
 
       val fold_right
-        :  x:local_ ((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4)
+        : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        x:local_ ((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4)
         -> y:local_ ((t, bool) Fieldslib.Field.t -> 'acc__2 -> 'acc__3)
         -> z:local_ ((t, float) Fieldslib.Field.t -> 'acc__1 -> 'acc__2)
         -> f:local_ ((t, string -> string) Fieldslib.Field.t -> 'acc__0 -> 'acc__1)
@@ -163,7 +165,8 @@ module Everything : sig
         @@ portable
 
       val make_creator
-        :  x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
+        : 'input__ 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
         -> y:((t, bool) Fieldslib.Field.t -> 'acc__1 -> ('input__ -> bool) * 'acc__2)
         -> z:((t, float) Fieldslib.Field.t -> 'acc__2 -> ('input__ -> float) * 'acc__3)
         -> f:
@@ -209,7 +212,8 @@ module Everything : sig
         @@ portable
 
       val to_list
-        :  x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
+        : 'elem__.
+        x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
         -> y:local_ ((t, bool) Fieldslib.Field.t -> 'elem__)
         -> z:local_ ((t, float) Fieldslib.Field.t -> 'elem__)
         -> f:local_ ((t, string -> string) Fieldslib.Field.t -> 'elem__)
@@ -217,8 +221,8 @@ module Everything : sig
         @@ portable
 
       val map_poly
-        :  local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user
-        -> 'x0 list
+        : 'x0.
+        local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
         @@ portable
 
       module Direct : sig
@@ -236,7 +240,8 @@ module Everything : sig
           @@ portable
 
         val fold
-          :  t
+          : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+          t
           -> init:'acc__0
           -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
           -> y:local_ ('acc__1 -> (t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2)
@@ -277,7 +282,8 @@ module Everything : sig
           @@ portable
 
         val to_list
-          :  t
+          : 'elem__.
+          t
           -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
           -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> 'elem__)
           -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> 'elem__)
@@ -290,7 +296,8 @@ module Everything : sig
           @@ portable
 
         val fold_right
-          :  t
+          : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+          t
           -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'acc__3 -> 'acc__4)
           -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2 -> 'acc__3)
           -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> 'acc__1 -> 'acc__2)

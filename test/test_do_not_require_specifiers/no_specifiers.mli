@@ -53,14 +53,16 @@ include sig
     val x : (t, int) Fieldslib.Field.t @@ portable
 
     val fold
-      :  init:'acc__0
+      : 'acc__0 'acc__1 'acc__2.
+      init:'acc__0
       -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
       -> y:local_ ('acc__1 -> (t, string list) Fieldslib.Field.t -> 'acc__2)
       -> 'acc__2
       @@ portable
 
     val make_creator
-      :  x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
+      : 'input__ 'acc__0 'acc__1 'acc__2.
+      x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
       -> y:
            ((t, string list) Fieldslib.Field.t
             -> 'acc__1
@@ -96,14 +98,15 @@ include sig
       @@ portable
 
     val to_list
-      :  x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
+      : 'elem__.
+      x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
       -> y:local_ ((t, string list) Fieldslib.Field.t -> 'elem__)
       -> 'elem__ list
       @@ portable
 
     val map_poly
-      :  local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user
-      -> 'x0 list
+      : 'x0.
+      local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
       @@ portable
 
     module Direct : sig
@@ -115,7 +118,8 @@ include sig
         @@ portable
 
       val fold
-        :  t
+        : 'acc__0 'acc__1 'acc__2.
+        t
         -> init:'acc__0
         -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
         -> y:
@@ -142,7 +146,8 @@ include sig
         @@ portable
 
       val to_list
-        :  t
+        : 'elem__.
+        t
         -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
         -> y:local_ ((t, string list) Fieldslib.Field.t -> t -> string list -> 'elem__)
         -> 'elem__ list
