@@ -145,7 +145,8 @@ module Everything : sig
       val x : (t, int) Fieldslib.Field.t
 
       val fold
-        :  init:'acc__0
+        : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        init:'acc__0
         -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
         -> y:('acc__1 -> (t, bool) Fieldslib.Field.t -> 'acc__2)
         -> z:('acc__2 -> (t, float) Fieldslib.Field.t -> 'acc__3)
@@ -153,7 +154,8 @@ module Everything : sig
         -> 'acc__4
 
       val fold_right
-        :  x:((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4)
+        : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        x:((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4)
         -> y:((t, bool) Fieldslib.Field.t -> 'acc__2 -> 'acc__3)
         -> z:((t, float) Fieldslib.Field.t -> 'acc__1 -> 'acc__2)
         -> f:((t, string -> string) Fieldslib.Field.t -> 'acc__0 -> 'acc__1)
@@ -161,7 +163,8 @@ module Everything : sig
         -> 'acc__4
 
       val make_creator
-        :  x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
+        : 'input__ 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+        x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
         -> y:((t, bool) Fieldslib.Field.t -> 'acc__1 -> ('input__ -> bool) * 'acc__2)
         -> z:((t, float) Fieldslib.Field.t -> 'acc__2 -> ('input__ -> float) * 'acc__3)
         -> f:
@@ -202,15 +205,16 @@ module Everything : sig
         -> bool
 
       val to_list
-        :  x:((t, int) Fieldslib.Field.t -> 'elem__)
+        : 'elem__.
+        x:((t, int) Fieldslib.Field.t -> 'elem__)
         -> y:((t, bool) Fieldslib.Field.t -> 'elem__)
         -> z:((t, float) Fieldslib.Field.t -> 'elem__)
         -> f:((t, string -> string) Fieldslib.Field.t -> 'elem__)
         -> 'elem__ list
 
       val map_poly
-        :  ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user
-        -> 'x0 list
+        : 'x0.
+        ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
 
       module Direct : sig
         val iter
@@ -226,7 +230,8 @@ module Everything : sig
           -> unit
 
         val fold
-          :  t
+          : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+          t
           -> init:'acc__0
           -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
           -> y:('acc__1 -> (t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2)
@@ -264,7 +269,8 @@ module Everything : sig
           -> bool
 
         val to_list
-          :  t
+          : 'elem__.
+          t
           -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
           -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> 'elem__)
           -> z:((t, float) Fieldslib.Field.t -> t -> float -> 'elem__)
@@ -276,7 +282,8 @@ module Everything : sig
           -> 'elem__ list
 
         val fold_right
-          :  t
+          : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
+          t
           -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'acc__3 -> 'acc__4)
           -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2 -> 'acc__3)
           -> z:((t, float) Fieldslib.Field.t -> t -> float -> 'acc__1 -> 'acc__2)

@@ -128,7 +128,16 @@ module A = struct
          ~expr:(pmod_structure ~loc structure))
   ;;
 
-  let sig_item ?(attrs = []) ~loc ~portable name typ =
+  let sig_item ?(attrs = []) ~loc ~portable ~univars name typ =
+    let typ =
+      match univars with
+      | [] -> typ
+      | _ ->
+        let univars =
+          List.map univars ~f:Ppxlib_jane.get_type_param_name_and_jkind_of_core_type
+        in
+        Ppxlib_jane.Ast_builder.Default.ptyp_poly ~loc univars typ
+    in
     let val_desc =
       value_description
         ~loc
@@ -330,7 +339,10 @@ module Gen_sig = struct
       |> Create.lambda_sig ~loc [ Nolabel, acc 0 ]
       |> Create.lambda_sig ~loc types
     in
-    A.sig_item ~loc ~portable "make_creator" t
+    let univars =
+      ([%type: 'input__] :: List.init (List.length labdecs + 1) ~f:acc) @ tps
+    in
+    A.sig_item ~loc ~portable ~univars "make_creator" t
   ;;
 
   let simple_create_fun ~ty_name ~tps ~portable ~loc labdecs =
@@ -341,7 +353,7 @@ module Gen_sig = struct
     in
     let types = List.map labdecs ~f in
     let t = Create.lambda_sig ~loc types record in
-    A.sig_item ~loc ~portable "create" t
+    A.sig_item ~loc ~portable ~univars:tps "create" t
   ;;
 
   let fold_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -362,7 +374,8 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ init_ty ]
     in
-    A.sig_item ~loc ~portable "fold" t
+    let univars = List.init (List.length labdecs + 1) ~f:acc @ tps in
+    A.sig_item ~loc ~portable ~univars "fold" t
   ;;
 
   let direct_fold_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -385,7 +398,8 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record; init_ty ]
     in
-    A.sig_item ~loc ~portable "fold" t
+    let univars = List.init (List.length labdecs + 1) ~f:acc @ tps in
+    A.sig_item ~loc ~portable ~univars "fold" t
   ;;
 
   let fold_right_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -408,7 +422,8 @@ module Gen_sig = struct
       |> Create.lambda_sig ~loc [ init_ty ]
       |> Create.lambda_sig ~modes:Modes.local ~loc types
     in
-    A.sig_item ~loc ~portable "fold_right" t
+    let univars = List.init (numlabs + 1) ~f:acc @ tps in
+    A.sig_item ~loc ~portable ~univars "fold_right" t
   ;;
 
   let direct_fold_right_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -437,7 +452,8 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable "fold_right" t
+    let univars = List.init (numlabs + 1) ~f:acc @ tps in
+    A.sig_item ~loc ~portable ~univars "fold_right" t
   ;;
 
   let bool_fun fun_name ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -447,7 +463,7 @@ module Gen_sig = struct
     in
     let types = List.map labdecs ~f in
     let t = Create.lambda_sig ~modes:Modes.local ~loc types [%type: bool] in
-    A.sig_item ~loc ~portable fun_name t
+    A.sig_item ~loc ~portable ~univars:tps fun_name t
   ;;
 
   let direct_bool_fun fun_name ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -462,7 +478,7 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable fun_name t
+    A.sig_item ~loc ~portable ~univars:tps fun_name t
   ;;
 
   let iter_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -472,7 +488,7 @@ module Gen_sig = struct
     in
     let types = List.map labdecs ~f in
     let t = Create.lambda_sig ~modes:Modes.local ~loc types [%type: unit] in
-    A.sig_item ~loc ~portable "iter" t
+    A.sig_item ~loc ~portable ~univars:tps "iter" t
   ;;
 
   let direct_iter_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -487,7 +503,7 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable "iter" t
+    A.sig_item ~loc ~portable ~univars:tps "iter" t
   ;;
 
   let to_list_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -498,7 +514,8 @@ module Gen_sig = struct
     in
     let types = List.map labdecs ~f in
     let t = Create.lambda_sig ~modes:Modes.local ~loc types [%type: 'elem__ list] in
-    A.sig_item ~loc ~portable "to_list" t
+    let univars = [%type: 'elem__] :: tps in
+    A.sig_item ~loc ~portable ~univars "to_list" t
   ;;
 
   let direct_to_list_fun ~private_ ~ty_name ~tps ~portable ~loc labdecs =
@@ -513,7 +530,8 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable "to_list" t
+    let univars = [%type: 'elem__] :: tps in
+    A.sig_item ~loc ~portable ~univars "to_list" t
   ;;
 
   let map_fun ~ty_name ~tps ~loc ~portable labdecs =
@@ -524,7 +542,7 @@ module Gen_sig = struct
     in
     let types = List.map labdecs ~f in
     let t = Create.lambda_sig ~modes:Modes.local ~loc types record in
-    A.sig_item ~loc ~portable "map" t
+    A.sig_item ~loc ~portable ~univars:tps "map" t
   ;;
 
   let direct_map_fun ~ty_name ~tps ~portable ~loc labdecs =
@@ -540,7 +558,7 @@ module Gen_sig = struct
       |> Create.lambda_sig ~modes:Modes.local ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable "map" t
+    A.sig_item ~loc ~portable ~univars:tps "map" t
   ;;
 
   let map_poly ~private_ ~ty_name ~portable ~tps ~loc _ =
@@ -568,7 +586,8 @@ module Gen_sig = struct
             [ perm; record; fresh_variable ]]
         -> [%t fresh_variable] list]
     in
-    A.sig_item ~loc ~portable "map_poly" t
+    let univars = fresh_variable :: tps in
+    A.sig_item ~loc ~portable ~univars "map_poly" t
   ;;
 
   let set_all_mutable_fields ~ty_name ~tps ~portable ~loc ~gen_zero_alloc_attrs labdecs =
@@ -594,6 +613,7 @@ module Gen_sig = struct
       ~attrs
       ~loc
       ~portable
+      ~univars:tps
       "set_all_mutable_fields"
       [%type: [%t record] -> [%t labels]]
   ;;
@@ -614,7 +634,12 @@ module Gen_sig = struct
         let { pld_name = { txt = name; loc }; pld_type = ty; _ } = labdec in
         let record_ty = apply_type ~loc ~ty_name ~tps in
         let field =
-          A.sig_item ~loc ~portable name (field_t ~loc private_ [ record_ty; ty ])
+          A.sig_item
+            ~loc
+            ~portable
+            ~univars:tps
+            name
+            (field_t ~loc private_ [ record_ty; ty ])
         in
         Selector.Per_field Fields, field)
     in
@@ -636,7 +661,13 @@ module Gen_sig = struct
                Option.some_if gen_zero_alloc_attrs attr |> Option.to_list
              in
              let getter_sig suffix arrow =
-               A.sig_item ~attrs ~loc ~portable (name ^ suffix) (arrow record_ty ty)
+               A.sig_item
+                 ~attrs
+                 ~loc
+                 ~portable
+                 ~univars:tps
+                 (name ^ suffix)
+                 (arrow record_ty ty)
              in
              [ ( Selector.Per_field Getters
                , getter_sig "" (fun a b -> [%type: [%t a] -> [%t b]]) )
@@ -661,6 +692,7 @@ module Gen_sig = struct
                    ~attrs
                    ~loc
                    ~portable
+                   ~univars:tps
                    ("set_" ^ name)
                    [%type: [%t record_ty] -> [%t ty] -> unit] )
              in
@@ -699,7 +731,9 @@ module Gen_sig = struct
     in
     List.concat
       [ getters_and_setters
-      ; [ Per_field Names, A.sig_item ~loc ~portable "names" [%type: string list] ]
+      ; [ ( Per_field Names
+          , A.sig_item ~loc ~portable ~univars:tps "names" [%type: string list] )
+        ]
       ; fields
       ; [ Iterator Fold, fold; Iterator Fold_right, fold_right ]
       ; (match private_ with

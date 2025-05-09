@@ -53,13 +53,15 @@ include sig
     val x : (t, int) Fieldslib.Field.t
 
     val fold
-      :  init:'acc__0
+      : 'acc__0 'acc__1 'acc__2.
+      init:'acc__0
       -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
       -> y:('acc__1 -> (t, string list) Fieldslib.Field.t -> 'acc__2)
       -> 'acc__2
 
     val make_creator
-      :  x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
+      : 'input__ 'acc__0 'acc__1 'acc__2.
+      x:((t, int) Fieldslib.Field.t -> 'acc__0 -> ('input__ -> int) * 'acc__1)
       -> y:
            ((t, string list) Fieldslib.Field.t
             -> 'acc__1
@@ -90,11 +92,14 @@ include sig
       -> bool
 
     val to_list
-      :  x:((t, int) Fieldslib.Field.t -> 'elem__)
+      : 'elem__.
+      x:((t, int) Fieldslib.Field.t -> 'elem__)
       -> y:((t, string list) Fieldslib.Field.t -> 'elem__)
       -> 'elem__ list
 
-    val map_poly : ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
+    val map_poly
+      : 'x0.
+      ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
 
     module Direct : sig
       val iter
@@ -104,7 +109,8 @@ include sig
         -> unit
 
       val fold
-        :  t
+        : 'acc__0 'acc__1 'acc__2.
+        t
         -> init:'acc__0
         -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
         -> y:
@@ -128,7 +134,8 @@ include sig
         -> bool
 
       val to_list
-        :  t
+        : 'elem__.
+        t
         -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
         -> y:((t, string list) Fieldslib.Field.t -> t -> string list -> 'elem__)
         -> 'elem__ list
