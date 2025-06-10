@@ -294,47 +294,6 @@ let docs_url =
   "https://github.com/janestreet/ppx_fields_conv/blob/master/README.md#selecting-definitions"
 ;;
 
-let no_definitions_error_message =
-  String.concat
-    ~sep:" "
-    [ "No definitions selected."
-    ; "See the \"Selecting definitions\" section of the documentation:"
-    ; docs_url
-    ]
-;;
-
-let generator ~add_dependencies f =
-  Deriving.Generator.V2.make
-    (let open Deriving.Args in
-     empty
-     +> arg "fold_right" (map1 __ ~f:select_fold_right)
-     +> arg "getters" (map1 __ ~f:select_getters)
-     +> arg "local_getters" (map1 __ ~f:select_local_getters)
-     +> arg "setters" (map1 __ ~f:select_setters)
-     +> arg "names" (map1 __ ~f:select_names)
-     +> arg "fields" (map1 __ ~f:select_fields)
-     +> arg "iterators" (map1 __ ~f:select_iterators)
-     +> arg "direct_iterators" (map1 __ ~f:select_direct_iterators))
-    (fun ~ctxt ast arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 ->
-      let loc = Expansion_context.Deriver.derived_item_loc ctxt in
-      let results =
-        match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7; arg8 ] with
-        | [] ->
-          [ (if !selectors_are_mandatory
-             then Error [ loc, no_definitions_error_message ]
-             else Ok default_selectors)
-          ]
-        | _ :: _ as non_empty -> non_empty
-      in
-      let selection =
-        Result.combine_errors results
-        |> Result.map ~f:List.concat
-        |> Result.map ~f:(selection ~add_dependencies)
-        |> Result.map_error ~f:(error_of_alists ~loc)
-      in
-      f ~ctxt ast selection)
-;;
-
 let deriving_clause ~loc list =
   let open Ast_builder.Default in
   if List.is_empty list
@@ -378,6 +337,68 @@ let deriving_clause ~loc list =
          ~loc
          [%expr fields]
          (List.concat [ per_field; iterators; direct_iterators ])))
+;;
+
+let no_definitions_error_message =
+  lazy
+    (let module Format = Stdlib.Format in
+    let buffer = Buffer.create 1024 in
+    let fmt = Format.formatter_of_buffer buffer in
+    Format.pp_set_margin fmt 60;
+    Format.fprintf
+      fmt
+      "No definitions selected. See the \"Selecting definitions\" section of the \
+       documentation: %s\n\
+       Here is an example with some commonly used selectors, although not generally in \
+       this combination:@ @,\
+       @[<2>[%@%@deriving@ "
+      docs_url;
+    Pprintast.expression
+      fmt
+      (Option.value_exn
+         (deriving_clause
+            ~loc:Ppxlib.Location.none
+            [ Per_field Getters
+            ; Per_field Names
+            ; Iterator Create
+            ; Iterator Iter
+            ; Direct_iterator Set_all_mutable_fields
+            ]));
+    Format.fprintf fmt "]@]";
+    Format.pp_print_flush fmt ();
+    Buffer.contents buffer)
+;;
+
+let generator ~add_dependencies f =
+  Deriving.Generator.V2.make
+    (let open Deriving.Args in
+     empty
+     +> arg "fold_right" (map1 __ ~f:select_fold_right)
+     +> arg "getters" (map1 __ ~f:select_getters)
+     +> arg "local_getters" (map1 __ ~f:select_local_getters)
+     +> arg "setters" (map1 __ ~f:select_setters)
+     +> arg "names" (map1 __ ~f:select_names)
+     +> arg "fields" (map1 __ ~f:select_fields)
+     +> arg "iterators" (map1 __ ~f:select_iterators)
+     +> arg "direct_iterators" (map1 __ ~f:select_direct_iterators))
+    (fun ~ctxt ast arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 ->
+      let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+      let results =
+        match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7; arg8 ] with
+        | [] ->
+          [ (if !selectors_are_mandatory
+             then Error [ loc, force no_definitions_error_message ]
+             else Ok default_selectors)
+          ]
+        | _ :: _ as non_empty -> non_empty
+      in
+      let selection =
+        Result.combine_errors results
+        |> Result.map ~f:List.concat
+        |> Result.map ~f:(selection ~add_dependencies)
+        |> Result.map_error ~f:(error_of_alists ~loc)
+      in
+      f ~ctxt ast selection)
 ;;
 
 let () =
