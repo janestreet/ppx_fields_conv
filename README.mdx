@@ -1,6 +1,22 @@
 ppx_fields_conv
 ===============
 
+<!-- set up
+```ocaml
+open! Base
+open! Fieldslib
+```
+
+```ocaml env=extended
+open! Base
+open! Fieldslib
+```
+
+```ocaml env=alloc
+open! Base
+open! Fieldslib
+```
+-->
 
 Generation of accessor and iteration functions for ocaml records.
 
@@ -18,26 +34,34 @@ One common use of `ppx_fields_conv` is to derive accessor functions on record ty
 For example, one can derive `getters` on the following simple record type:
 
 ```ocaml
-type t = {
-  dir : [ `Buy | `Sell ];
-  quantity : int;
-  price : float;
-  mutable cancelled : bool;
-} [@@deriving fields ~getters]
+module M = struct
+  type t =
+    { dir : [ `Buy | `Sell ]
+    ; quantity : int
+    ; price : float
+    ; mutable cancelled : bool
+    }
+  [@@deriving fields ~getters]
+end
 ```
 
 Which produces functions with the following signatures:
 
 ```ocaml
-val cancelled : t -> bool @@ portable
-val price     : t -> float @@ portable
-val quantity  : t -> int @@ portable
-val dir       : t -> [ `Buy | `Sell ] @@ portable
+module _ : sig
+  type t
+
+  val cancelled : t -> bool @@ portable
+  val price : t -> float @@ portable
+  val quantity : t -> int @@ portable
+  val dir : t -> [ `Buy | `Sell ] @@ portable
+end =
+  M
 ```
 
 # Selecting definitions
 
-The `[@@deriving fields]` clause requires _selectors_ specifying which definitions it
+The `[@@deriving fields]` clause accepts _selectors_ specifying which definitions it
 should provide. Use `~getters` and `~setters` to explicitly select toplevel accessors,
 `~fields` to select `Field.t` values, and `~names` to select `Fields.names`. Use
 `~iterators` with a tuple containing names chosen from `create`, `make_creator`, and so
@@ -52,11 +76,12 @@ type t = { x : int; y : int }
 The above defines the accessors `x` and `y`, the field values
 `Fields.x` and `Fields.y`, `Fields.fold`, and `Fields.iter`.
 
-Writing `[@@deriving fields]` with no selectors will produce an error during
-preprocessing. Passing the command-line argument
-`-deriving-fields-require-selectors=false` restores the legacy behavior of deriving all of
-the below functions except `Fields.fold_right` and `Direct_iterator.fold_right`. This flag
-should only be used with external code.
+By default, `[@@deriving fields]` with no selectors derives all of the functions below
+except `Fields.fold_right` and `Direct_iterator.fold_right`. This behavior can be changed
+with the `-deriving-fields-require-selectors` command-line argument, which currently
+defaults to `false`. Passing `true` instead causes `[@@derving fields]` with no selectors
+to produce an error during preprocessing. Note that the default behavior derives
+`map_poly`, so it doesn't work with records with unboxed fields.
 
 ## Implicitly-selected definitions
 
@@ -82,31 +107,32 @@ follows:
 
 <!--BEGIN type_decl-->
 ```ocaml
-type t = {
-  dir : [ `Buy | `Sell ];
-  quantity : int;
-  price : float;
-  mutable cancelled : bool;
-} [@@deriving
-    fields
-      ~getters
-      ~local_getters
-      ~setters
-      ~names
-      ~fields
-      ~iterators:
-        ( create
-        , make_creator
-        , exists
-        , fold
-        , fold_right
-        , for_all
-        , iter
-        , map
-        , to_list
-        , map_poly )
-      ~direct_iterators:
-        (exists, fold, fold_right, for_all, iter, map, to_list, set_all_mutable_fields)]
+type t =
+  { dir : [ `Buy | `Sell ]
+  ; quantity : int
+  ; price : float
+  ; mutable cancelled : bool
+  }
+[@@deriving
+  fields
+    ~getters
+    ~local_getters
+    ~setters
+    ~names
+    ~fields
+    ~iterators:
+      ( create
+      , make_creator
+      , exists
+      , fold
+      , fold_right
+      , for_all
+      , iter
+      , map
+      , to_list
+      , map_poly )
+    ~direct_iterators:
+      (exists, fold, fold_right, for_all, iter, map, to_list, set_all_mutable_fields)]
 ```
 <!--END-->
 
@@ -115,7 +141,7 @@ portable` annotations are for OxCaml only, and are converted to ignored attribut
 regular OCaml):
 
 <!--BEGIN generated_sig-->
-```ocaml
+```ocaml skip
 (* getters *)
 val cancelled : t -> bool @@ portable [@@zero_alloc]
 val price     : t -> float @@ portable [@@zero_alloc]
@@ -297,7 +323,7 @@ the above types; In an `*.ml`, definitions will be generated.
 
 `Field.t` is defined in `Fieldslib`, including:
 
-```ocaml
+```ocaml skip
 type ('perm, 'record, 'field) t_with_perm
 
 type ('record, 'field) t = ([ `Read | `Set_and_create], 'record, 'field) t_with_perm
@@ -306,18 +332,46 @@ val name :  (_, _, _) t_with_perm -> string
 val get  : (_, 'r, 'a) t_with_perm -> 'r -> 'a
 ```
 
-## Zero_alloc attribute
+## `zero_alloc` attribute
 
 By default, `ppx_fields_conv` will generate `[@@zero_alloc]` attributes for all getters,
 setters, and `set_all_mutable_fields`. It is possible, however, that the generated
 implementations for a given record may actually allocate, causing the compiler to complain
 (this can happen e.g. if your record contains all float fields, or you mask the generated
-code with custom definitions). In these instance you can tag your record with an
+code with custom definitions). 
+
+```ocaml env=alloc
+module Some_float_type = struct
+  type t = float
+end
+```
+
+```ocaml env=alloc
+type t =
+  { x : Some_float_type.t
+  ; y : Some_float_type.t
+  }
+[@@deriving fields ~getters]
+```
+```mdx-error
+Line 2, characters 7-8:
+Error: Annotation check for zero_alloc failed on function TOP9.x (camlTOP9__x_103_107_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+
+Line 3, characters 7-8:
+Error: Annotation check for zero_alloc failed on function TOP9.y (camlTOP9__y_102_106_code).
+Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
+```
+
+In these instance you can tag your record with an
 additional attribute `[@@fields.no_zero_alloc]` to disable adding the `[@@zero_alloc]`
 attribute:
 
-```ocaml
-type t = { x : Some_float_type.t }
+```ocaml env=alloc
+type t =
+  { x : Some_float_type.t
+  ; y : Some_float_type.t
+  }
 [@@fields.no_zero_alloc]
 [@@deriving fields ~getters]
 ```
@@ -334,20 +388,20 @@ small price differences:
 
 ```ocaml
 let ( = ) a b : bool =
-  let use op = fun field ->
-    op (Field.get field a) (Field.get field b)
-  in
-  let price_equal p1 p2 = Float.abs (p1 -. p2) < 0.001 in
+  let use op field = op (Field.get field a) (Field.get field b) in
+  let price_equal p1 p2 = Float.(abs (p1 - p2) < 0.001) in
   Fields.for_all
-    ~dir:(use (=)) ~quantity:(use (=))
-    ~price:(use price_equal) ~cancelled:(use (=))
+    ~dir:(use Poly.equal)
+    ~quantity:(use ( = ))
+    ~price:(use price_equal)
+    ~cancelled:(use Bool.equal)
 ;;
 ```
 
 A type error would occur if you were to add a new field and not change
 the definition of `( = )`:
 
-```ocaml
+```ocaml env=extended
 type t = {
   dir : [ `Buy | `Sell ];
   quantity : int;
@@ -355,25 +409,44 @@ type t = {
   mutable cancelled : bool;
   symbol : string;
 } [@@deriving fields ~iterators:(for_all, fold)]
+```
 
-...
+```ocaml env=extended
+let ( = ) a b : bool =
+  let use op field = op (Field.get field a) (Field.get field b) in
+  let price_equal p1 p2 = Float.(abs (p1 - p2) < 0.001) in
+  Fields.for_all
+    ~dir:(use Poly.equal)
+    ~quantity:(use ( = ))
+    ~price:(use price_equal)
+    ~cancelled:(use Bool.equal)
+;;
+```
+```mdx-error
+Lines 4-8, characters 5-34:
 Error: This expression has type
-         symbol:(([< `Read | `Set_and_create ], t, string) Field.t_with_perm ->
-                 bool) ->
+         symbol:local_
+         (([< `Read | `Set_and_create ], t, string) Field.t_with_perm -> bool) ->
          bool
        but an expression was expected of type bool
+  Hint: This function application is partial,
+  maybe some arguments are missing.
 ```
 
 Or similarly you could use `fold` to create `to_string` function:
 
 ```ocaml
 let to_string t =
-  let conv to_s = fun acc f ->
-    (sprintf "%s: %s" (Field.name f) (to_s (Field.get f t))) :: acc
+  let conv to_s acc f =
+    Printf.sprintf "%s: %s" (Field.name f) (to_s (Field.get f t)) :: acc
   in
   let fs =
-    Fields.fold ~init:[]
-      ~dir:(conv (function `Buy -> "Buy" | `Sell -> "Sell"))
+    Fields.fold
+      ~init:[]
+      ~dir:
+        (conv (function
+          | `Buy -> "Buy"
+          | `Sell -> "Sell"))
       ~quantity:(conv Int.to_string)
       ~price:(conv Float.to_string)
       ~cancelled:(conv Bool.to_string)
@@ -384,3 +457,77 @@ let to_string t =
 
 Addition of a new field would cause a type error reminding you to
 update the definition of `to_string`.
+
+# Interaction with `ppx_template`
+
+<!--
+```ocaml
+open! Base
+```
+-->
+
+Sometimes a record type is [templated](%{root}/ppx/ppx_template/doc/README.mdx) over
+the kind of its parameter. For example:
+
+```ocaml
+type%template ('a : k) nonemptylist_with_length =
+  { hd : 'a
+  ; len : int
+  ; rest : ('a nonemptylist_with_length [@kind k]) option
+  }
+[@@deriving fields ~getters ~local_getters ~iterators:create ~direct_iterators:to_list]
+[@@kind k = (value, bits64, float64)]
+```
+
+Getters and other functions that are derived at the top-level are generated with each name
+templated the same way as the corresponding type. For example, the `hd` getter for
+`list_with_length [@kind bits64]` is `hd [@kind bits64]`. Here is an example client of
+these getters:
+
+```ocaml
+let%template[@kind k = (value, bits64, float64)] [@mode m = (global, local)] validate_lengths
+  (l @ m)
+  =
+  let rec inner_loop l =
+    let len_expected =
+      match (rest [@kind k] [@mode m]) l with
+      | Some rest -> inner_loop rest
+      | None -> 1
+    in
+    assert ((len [@kind k] [@mode m]) l = len_expected);
+    len_expected + 1
+  in
+  ignore (inner_loop l : int)
+;;
+```
+
+Functions derived in `Fields` are not themselves templated: rather,
+the whole module `Fields` is templated:
+
+```ocaml
+let%template[@kind k = (value, bits64, float64)] __ =
+  let module Fields = Fields_of_nonemptylist_with_length [@kind k] in
+  let _ = Fields.create in
+  let _ = Fields.Direct.to_list in
+  ()
+;;
+```
+
+Note that `map_poly` cannot currently be used with non-value record fields. Reach out to
+the maintainers if you have an example of a case where this would be useful.
+
+```ocaml
+type t = { x : int64# } [@@deriving fields ~iterators:map_poly]
+```
+```mdx-error
+Line 1, characters 6-7:
+Error: This expression has type
+         ([< `Read | `Set_and_create ], t, int64#) Field.t_with_perm
+       but an expression was expected of type
+         ([< `Read | `Set_and_create ], t, 'a) Field.t_with_perm
+       Hint: did you derive [fields ~iterators:map_poly] on a record with non-value fields?
+       The layout of int64# is bits64
+         because it is the unboxed version of the primitive type int64.
+       But the layout of int64# must be a sublayout of value
+         because of the annotation on the wildcard _ at line 1, characters 6-7.
+```
