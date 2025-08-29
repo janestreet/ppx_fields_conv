@@ -1061,6 +1061,7 @@ module Gen_struct = struct
         List.fold_right names ~init:[%expr [%e body_record]] ~f:(fun field_name acc ->
           pexp_let
             ~loc
+            Immutable
             Nonrecursive
             [ value_binding
                 ~loc
@@ -1078,6 +1079,7 @@ module Gen_struct = struct
       List.fold_right names ~init:body0 ~f:(fun field_name acc ->
         pexp_let
           ~loc
+          Immutable
           Nonrecursive
           [ value_binding
               ~loc
