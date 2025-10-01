@@ -3,6 +3,6 @@
  (public_name ppx_fields_conv)
  (kind ppx_deriver)
  (ppx_runtime_libraries fieldslib)
- (libraries base compiler-libs.common ppxlib ppxlib_jane)
+ (libraries base compiler-libs.common ppxlib ppxlib_jane ppx_helpers)
  (preprocess
   (pps ppxlib.metaquot)))

@@ -373,6 +373,7 @@ let generator ~add_dependencies f =
   Deriving.Generator.V2.make
     (let open Deriving.Args in
      empty
+     +> flag "unboxed"
      +> arg "fold_right" (map1 __ ~f:select_fold_right)
      +> arg "getters" (map1 __ ~f:select_getters)
      +> arg "local_getters" (map1 __ ~f:select_local_getters)
@@ -381,7 +382,7 @@ let generator ~add_dependencies f =
      +> arg "fields" (map1 __ ~f:select_fields)
      +> arg "iterators" (map1 __ ~f:select_iterators)
      +> arg "direct_iterators" (map1 __ ~f:select_direct_iterators))
-    (fun ~ctxt ast arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 ->
+    (fun ~ctxt ast unboxed arg1 arg2 arg3 arg4 arg5 arg6 arg7 arg8 ->
       let loc = Expansion_context.Deriver.derived_item_loc ctxt in
       let results =
         match List.filter_opt [ arg1; arg2; arg3; arg4; arg5; arg6; arg7; arg8 ] with
@@ -398,7 +399,7 @@ let generator ~add_dependencies f =
         |> Result.map ~f:(selection ~add_dependencies)
         |> Result.map_error ~f:(error_of_alists ~loc)
       in
-      f ~ctxt ast selection)
+      f ~ctxt ast selection ~unboxed)
 ;;
 
 let () =

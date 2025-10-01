@@ -6,5 +6,5 @@
   (pps ppxlib ppx_fields_conv)))
 
 (alias
- (name DEFAULT)
+ (name default)
  (deps test.ml.pp test.mli.pp))

@@ -22,7 +22,7 @@ module Selector = Ppx_fields_conv.Selector
 
 let () =
   let str_type_decl =
-    Selector.generator ~add_dependencies:false (fun ~ctxt _ selectors ->
+    Selector.generator ~add_dependencies:false (fun ~ctxt _ selectors ~unboxed:_ ->
       let loc = Expansion_context.Deriver.derived_item_loc ctxt in
       let selectors_expr =
         match selectors with

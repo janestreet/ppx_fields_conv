@@ -5,3 +5,32 @@ type t = { map : unit } [@@deriving fields ~iterators:map]
 Line _, characters _-_:
 Error: ppx_fields_conv: field name "map" conflicts with one of the generated functions
 |}]
+
+(** This is fine because [create] is not generated. *)
+type t = { create : unit } [@@deriving fields ~getters]
+
+[%%expect {| |}]
+
+type t =
+  { mutable foo : int
+  ; set_foo : int
+  }
+[@@deriving fields ~setters]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: ppx_fields_conv: field name "set_foo" conflicts with one of the generated functions
+|}]
+
+type t =
+  { foo : int
+  ; foo__local : int
+  }
+[@@deriving fields ~local_getters]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: ppx_fields_conv: field name "foo__local" conflicts with one of the generated functions
+|}]

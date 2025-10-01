@@ -22,6 +22,8 @@ module Iterator : sig
     | Map
     | To_list
     | Map_poly
+
+  val to_variable_name : t -> string
 end
 
 module Direct_iterator : sig
@@ -34,6 +36,8 @@ module Direct_iterator : sig
     | Map
     | To_list
     | Set_all_mutable_fields
+
+  val to_variable_name : t -> string
 end
 
 type t =
@@ -57,6 +61,7 @@ val generator
   -> (ctxt:Expansion_context.Deriver.t
       -> 'input
       -> ((t, comparator_witness) Set.t, Location.Error.t) Result.t
+      -> unboxed:bool
       -> 'output)
   -> ('output, 'input) Deriving.Generator.t
 
