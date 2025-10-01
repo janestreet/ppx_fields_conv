@@ -11,51 +11,54 @@ open Ppxlib_jane.Ast_builder.Default
 module Selector = Selector
 module Modes = Ppxlib_jane.Shim.Modes
 
-let check_no_collision =
-  let always =
-    [ "make_creator"
-    ; "create"
-    ; "fold"
-    ; "fold_right"
-    ; "iter"
-    ; "to_list"
-    ; "map"
-    ; "map_poly"
-    ; "for_all"
-    ; "exists"
-    ; "names"
-    ; "set_all_mutable_fields"
-    ]
-  in
-  fun ~(selection : (Selector.t, _) Set.t) ~ptype_name ~(labdecs : label_declaration list) ->
-    let deriving_local_getters = Set.mem selection (Per_field Local_getters) in
-    let generated_funs =
-      let extra_forbidden_names =
-        List.concat_map labdecs ~f:(fun { pld_name = { txt = pld; _ }; pld_mutable; _ } ->
-          (if deriving_local_getters then [ pld ^ "__local" ] else [])
-          @
+let check_no_collision
+  ~(selection : (Selector.t, _) Set.t)
+  ~ptype_name
+  ~check_unboxed_collision
+  ~(labdecs : label_declaration list)
+  =
+  let generated_funs =
+    Set.to_list selection
+    |> List.concat_map ~f:(function
+      | Selector.Per_field Fields ->
+        (* These match the name of the field, and do not generate a conflict. Fields of
+           implicit unboxed records are put in a separate module. *)
+        []
+      | Selector.Per_field Getters ->
+        if check_unboxed_collision
+        then List.map labdecs ~f:(fun { pld_name = { txt = pld; _ }; _ } -> pld ^ "_u")
+        else []
+      | Per_field Local_getters ->
+        List.concat_map labdecs ~f:(fun { pld_name = { txt = pld; _ }; _ } ->
+          [ pld ^ "__local" ]
+          @ if check_unboxed_collision then [ pld ^ "_u__local" ] else [])
+      | Per_field Setters ->
+        List.filter_map labdecs ~f:(fun { pld_name = { txt = pld; _ }; pld_mutable; _ } ->
           match pld_mutable with
-          | Mutable -> [ "set_" ^ pld ]
-          | Immutable -> [])
-      in
-      extra_forbidden_names @ always
-    in
-    (* For a type that both appears to have been templated over [local] and derives
+          | Mutable -> Some ("set_" ^ pld)
+          | Immutable -> None)
+        (* NB: implicit unboxed records have no mutable fields *)
+      | Per_field Names -> [ "names" ] (* Names is not actually per field *)
+      | Iterator iterator -> [ Selector.Iterator.to_variable_name iterator ]
+      | Direct_iterator iterator -> [ Selector.Direct_iterator.to_variable_name iterator ])
+  in
+  let deriving_local_getters = Set.mem selection (Per_field Local_getters) in
+  (* For a type that both appears to have been templated over [local] and derives
        [~local_getters], [getter [@mode local]] for some [getter] is ambiguous, so we
        prohibit this combination. *)
-    if String.is_substring ~substring:"__local" ptype_name.txt && deriving_local_getters
+  if String.is_substring ~substring:"__local" ptype_name.txt && deriving_local_getters
+  then
+    Location.raise_errorf
+      ~loc:ptype_name.loc
+      "ppx_fields_conv: type name %S conflicts with local getters"
+      ptype_name.txt;
+  List.iter labdecs ~f:(fun { pld_name; pld_loc; _ } ->
+    if List.mem generated_funs pld_name.txt ~equal:String.equal
     then
       Location.raise_errorf
-        ~loc:ptype_name.loc
-        "ppx_fields_conv: type name %S conflicts with local getters"
-        ptype_name.txt;
-    List.iter labdecs ~f:(fun { pld_name; pld_loc; _ } ->
-      if List.mem generated_funs pld_name.txt ~equal:String.equal
-      then
-        Location.raise_errorf
-          ~loc:pld_loc
-          "ppx_fields_conv: field name %S conflicts with one of the generated functions"
-          pld_name.txt)
+        ~loc:pld_loc
+        "ppx_fields_conv: field name %S conflicts with one of the generated functions"
+        pld_name.txt)
 ;;
 
 let no_zero_alloc_type_attr =
@@ -91,16 +94,13 @@ let strip_attributes =
   end
 ;;
 
-let demangle_type_name t =
-  match String.substr_index t ~pattern:"__" with
-  | Some i -> String.prefix t i, String.drop_prefix t i
-  | None -> t, ""
-;;
-
 let fields_module_name ty_name =
-  let ty_name, mangling = demangle_type_name ty_name in
+  let ty_name, mangling = Ppx_helpers.demangle_template ty_name in
   let base_mod_name =
-    if String.equal ty_name "t" then "Fields" else "Fields_of_" ^ ty_name
+    match ty_name with
+    | "t" -> "Fields"
+    | "t_u" -> "Fields_u"
+    | _ -> "Fields_of_" ^ ty_name
   in
   base_mod_name ^ mangling
 ;;
@@ -705,7 +705,10 @@ module Gen_sig = struct
     (labdecs : label_declaration list)
     : signature_item list
     =
-    let _, mangling = demangle_type_name ty_name in
+    let _, mangling = Ppx_helpers.demangle_template ty_name in
+    let mangling =
+      if Ppx_helpers.is_implicit_unboxed ty_name then "_u" ^ mangling else mangling
+    in
     let fields =
       List.rev_map labdecs ~f:(fun labdec ->
         let { pld_name = { txt = name; loc }; pld_type = ty; _ } = labdec in
@@ -853,7 +856,9 @@ module Gen_sig = struct
            psig_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
-  let fields_of_td (td : type_declaration) ~selection : signature_item list =
+  let fields_of_td (td : type_declaration) ~check_unboxed_collision ~selection
+    : signature_item list
+    =
     let { ptype_name = { txt = ty_name; loc } as ptype_name
         ; ptype_private = private_
         ; ptype_params
@@ -867,7 +872,7 @@ module Gen_sig = struct
     let ptype_kind = Ppxlib_jane.Shim.Type_kind.of_parsetree ptype_kind in
     match ptype_kind with
     | Ptype_record labdecs | Ptype_record_unboxed_product labdecs ->
-      check_no_collision ~selection ~ptype_name ~labdecs;
+      check_no_collision ~selection ~ptype_name ~check_unboxed_collision ~labdecs;
       let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
       let portable = not (has_fields_nonportable_attr td) in
       record
@@ -882,14 +887,15 @@ module Gen_sig = struct
     | _ -> []
   ;;
 
-  let generate ~ctxt (rec_flag, tds) selection =
+  let generate ~ctxt (rec_flag, tds) selection ~unboxed =
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
     match selection with
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
       check_at_least_one_record ~loc rec_flag tds;
-      List.concat_map tds ~f:(fields_of_td ~selection)
+      List.concat_map tds ~f:(fields_of_td ~check_unboxed_collision:unboxed ~selection)
   ;;
 end
 
@@ -919,7 +925,10 @@ module Gen_struct = struct
     ~gen_zero_alloc_attrs
     ({ private_; name; is_parameterized = _; labdecs; unboxed } as record_infos)
     =
-    let _, mangling = demangle_type_name name in
+    let _, mangling = Ppx_helpers.demangle_template name in
+    let mangling =
+      if Ppx_helpers.is_implicit_unboxed name then "_u" ^ mangling else mangling
+    in
     let rec_id =
       match labdecs with
       | [] -> assert false
@@ -1567,7 +1576,8 @@ module Gen_struct = struct
            pstr_extension ~loc (Location.Error.to_extension error) [])
   ;;
 
-  let fields_of_td (td : type_declaration) ~selection : structure =
+  let fields_of_td (td : type_declaration) ~check_unboxed_collision ~selection : structure
+    =
     let { ptype_name = { txt = ty_name; loc } as ptype_name
         ; ptype_private = private_
         ; ptype_params
@@ -1585,7 +1595,7 @@ module Gen_struct = struct
     in
     match ptype_kind with
     | Ptype_record labdecs | Ptype_record_unboxed_product labdecs ->
-      check_no_collision ~selection ~ptype_name ~labdecs;
+      check_no_collision ~selection ~ptype_name ~check_unboxed_collision ~labdecs;
       let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
       let portable = not (has_fields_nonportable_attr td) in
       record
@@ -1602,14 +1612,15 @@ module Gen_struct = struct
     | _ -> []
   ;;
 
-  let generate ~ctxt (rec_flag, tds) selection =
+  let generate ~ctxt (rec_flag, tds) selection ~unboxed =
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
     match selection with
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
       let tds = List.map tds ~f:name_type_params_in_td in
       check_at_least_one_record ~loc rec_flag tds;
-      List.concat_map tds ~f:(fields_of_td ~selection)
+      List.concat_map tds ~f:(fields_of_td ~check_unboxed_collision:unboxed ~selection)
   ;;
 end
 
