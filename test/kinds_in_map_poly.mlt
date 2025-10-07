@@ -1,0 +1,36 @@
+type t = { x : int64# } [@@deriving fields ~iterators:map_poly]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: This expression has type
+         ([< `Read | `Set_and_create ], t, int64#) Base.Field.t_with_perm
+       but an expression was expected of type
+         ([< `Read | `Set_and_create ], t, 'a) Base.Field.t_with_perm
+       Hint: did you derive [fields ~iterators:map_poly] on a record with non-value fields?
+       The layout of int64# is bits64
+         because it is the unboxed version of the primitive type int64.
+       But the layout of int64# must be a sublayout of value
+         because of the annotation on the wildcard _ at file "kinds_in_map_poly.mlt", line 1, characters 5-6.
+|}]
+
+[@@@warning "-duplicate-definitions"]
+
+type%template ('a : k) t = { x : 'a }
+[@@deriving fields ~iterators:map_poly] [@@kind k = (bits64, value)]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: This expression has type
+         ([< `Read | `Set_and_create ], 'a t__bits64, 'a)
+         Base.Field.t_with_perm
+       but an expression was expected of type
+         ([< `Read | `Set_and_create ], 'a t__bits64, 'b)
+         Base.Field.t_with_perm
+       Hint: did you derive [fields ~iterators:map_poly] on a record with non-value fields?
+       The layout of 'a is value
+         because of the annotation on the wildcard _ at file "kinds_in_map_poly.mlt", line 19, characters 23-24.
+       But the layout of 'a must overlap with bits64
+         because of the definition of x at file "kinds_in_map_poly.mlt", line 19, characters 29-30.
+|}]

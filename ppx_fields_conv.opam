@@ -13,9 +13,10 @@ depends: [
   "ocaml" {>= "5.1.0"}
   "base"
   "fieldslib"
+  "ppx_helpers"
   "ppxlib_jane"
   "dune"        {>= "3.17.0"}
-  "ppxlib"      {= "0.33.0+jst"}
+  "ppxlib"      {= "0.33.0+ox"}
 ]
 available: arch != "arm32" & arch != "x86_32"
 synopsis: "Generation of accessor and iteration functions for ocaml records"

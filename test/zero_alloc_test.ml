@@ -20,11 +20,11 @@ module All_floats = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let (y @ portable) _r__ = _r__.y
+    let (y @ portable) (_r__ : t) = _r__.y
     let _ = y
-    let (set_y @ portable) _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
     let _ = set_y
-    let (x @ portable) _r__ = _r__.x
+    let (x @ portable) (_r__ : t) = _r__.x
     let _ = x
 
     module Fields = struct
@@ -57,7 +57,7 @@ module All_floats = struct
       let _ = x
 
       module Direct = struct
-        let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
+        let (set_all_mutable_fields @ portable) (local_ (_record__ : t)) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always]
@@ -83,7 +83,7 @@ module Not_all_float = struct
 
     let _ = fun (_ : t) -> ()
 
-    let (y @ portable) _r__ = _r__.y
+    let (y @ portable) (_r__ : t) = _r__.y
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -92,7 +92,7 @@ module Not_all_float = struct
 
     let _ = y
 
-    let (set_y @ portable) _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -101,7 +101,7 @@ module Not_all_float = struct
 
     let _ = set_y
 
-    let (x @ portable) _r__ = _r__.x
+    let (x @ portable) (_r__ : t) = _r__.x
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -140,7 +140,7 @@ module Not_all_float = struct
       let _ = x
 
       module Direct = struct
-        let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
+        let (set_all_mutable_fields @ portable) (local_ (_record__ : t)) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always]
@@ -166,11 +166,11 @@ module Manually_disable = struct
   [@@deriving_inline fields ~getters ~setters] [@@fields.no_zero_alloc]
 
   let _ = fun (_ : t) -> ()
-  let (y @ portable) _r__ = _r__.y
+  let (y @ portable) (_r__ : t) = _r__.y
   let _ = y
-  let (set_y @ portable) _r__ v__ = _r__.y <- v__
+  let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
   let _ = set_y
-  let (x @ portable) _r__ = _r__.x
+  let (x @ portable) (_r__ : t) = _r__.x
   let _ = x
 
   [@@@end]
@@ -185,7 +185,7 @@ module With_arrow_fields = struct
 
   let _ = fun (_ : t) -> ()
 
-  let (y @ portable) _r__ = _r__.y
+  let (y @ portable) (_r__ : t) = _r__.y
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -194,7 +194,7 @@ module With_arrow_fields = struct
 
   let _ = y
 
-  let (set_y @ portable) _r__ v__ = _r__.y <- v__
+  let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -203,7 +203,7 @@ module With_arrow_fields = struct
 
   let _ = set_y
 
-  let (x @ portable) _r__ = _r__.x
+  let (x @ portable) (_r__ : t) = _r__.x
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -228,15 +228,15 @@ module All_float_dot_t = struct
     [@@@ocaml.warning "-60"]
 
     let _ = fun (_ : t) -> ()
-    let (z @ portable) _r__ = _r__.z
+    let (z @ portable) (_r__ : t) = _r__.z
     let _ = z
-    let (set_z @ portable) _r__ v__ = _r__.z <- v__
+    let (set_z @ portable) (_r__ : t) v__ = _r__.z <- v__
     let _ = set_z
-    let (y @ portable) _r__ = _r__.y
+    let (y @ portable) (_r__ : t) = _r__.y
     let _ = y
-    let (set_y @ portable) _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
     let _ = set_y
-    let (x @ portable) _r__ = _r__.x
+    let (x @ portable) (_r__ : t) = _r__.x
     let _ = x
 
     module Fields = struct
@@ -286,7 +286,7 @@ module All_float_dot_t = struct
       let _ = x
 
       module Direct = struct
-        let (set_all_mutable_fields @ portable) (local_ _record__) ~y ~z =
+        let (set_all_mutable_fields @ portable) (local_ (_record__ : t)) ~y ~z =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y;
           _record__.z <- z

@@ -9,7 +9,7 @@ module One_thing = struct
 
   let _ = fun (_ : t) -> ()
 
-  let (set_y @ portable) _r__ v__ = _r__.y <- v__
+  let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -32,7 +32,7 @@ module Local_getters = struct
 
   let _ = fun (_ : t) -> ()
 
-  let (z__local @ portable) (local_ _r__) = exclave_ _r__.z
+  let (z__local @ portable) (local_ (_r__ : t)) = exclave_ _r__.z
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -41,7 +41,7 @@ module Local_getters = struct
 
   let _ = z__local
 
-  let (y__local @ portable) (local_ _r__) = _r__.y
+  let (y__local @ portable) (local_ (_r__ : t)) = _r__.y
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -50,7 +50,7 @@ module Local_getters = struct
 
   let _ = y__local
 
-  let (x__local @ portable) (local_ _r__) = exclave_ _r__.x
+  let (x__local @ portable) (local_ (_r__ : t)) = exclave_ _r__.x
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -59,7 +59,7 @@ module Local_getters = struct
 
   let _ = x__local
 
-  let (w__local @ portable) (local_ _r__) = _r__.w
+  let (w__local @ portable) (local_ (_r__ : t)) = _r__.w
   [@@zero_alloc
     custom_error_message
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -104,7 +104,7 @@ module Everything = struct
 
     let _ = fun (_ : t) -> ()
 
-    let (f @ portable) _r__ = _r__.f
+    let (f @ portable) (_r__ : t) = _r__.f
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -113,7 +113,7 @@ module Everything = struct
 
     let _ = f
 
-    let (z @ portable) _r__ = _r__.z
+    let (z @ portable) (_r__ : t) = _r__.z
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -122,7 +122,7 @@ module Everything = struct
 
     let _ = z
 
-    let (y @ portable) _r__ = _r__.y
+    let (y @ portable) (_r__ : t) = _r__.y
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -131,7 +131,7 @@ module Everything = struct
 
     let _ = y
 
-    let (set_y @ portable) _r__ v__ = _r__.y <- v__
+    let (set_y @ portable) (_r__ : t) v__ = _r__.y <- v__
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -140,7 +140,7 @@ module Everything = struct
 
     let _ = set_y
 
-    let (x @ portable) _r__ = _r__.x
+    let (x @ portable) (_r__ : t) = _r__.x
     [@@zero_alloc
       custom_error_message
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
@@ -215,6 +215,7 @@ module Everything = struct
         ~z:z_fun__
         ~f:f_fun__
         compile_acc__
+        : (_ -> t) * _
         =
         let x_gen__, compile_acc__ = x_fun__ x compile_acc__ in
         let y_gen__, compile_acc__ = y_fun__ y compile_acc__ in
@@ -230,7 +231,7 @@ module Everything = struct
       ;;
 
       let _ = make_creator
-      let (create @ portable) ~x ~y ~z ~f = { x; y; z; f }
+      let (create @ portable) ~x ~y ~z ~f : t = { x; y; z; f }
       let _ = create
 
       let (map @ portable)
@@ -238,6 +239,7 @@ module Everything = struct
         ~y:(local_ y_fun__)
         ~z:(local_ z_fun__)
         ~f:(local_ f_fun__)
+        : t
         =
         { x = x_fun__ x; y = y_fun__ y; z = z_fun__ z; f = f_fun__ f }
       ;;
@@ -271,10 +273,30 @@ module Everything = struct
       let _ = fold
 
       let (map_poly @ portable) (local_ record__) =
-        [ record__.Fieldslib.Field.f x
-        ; record__.Fieldslib.Field.f y
-        ; record__.Fieldslib.Field.f z
-        ; record__.Fieldslib.Field.f f
+        [ record__.Fieldslib.Field.f
+            ((x
+             : (_, _, _ : value) Fieldslib.Field.t_with_perm)
+             [@error_message
+               "Hint: did you derive [fields ~iterators:map_poly] on a record with \
+                non-value fields?"])
+        ; record__.Fieldslib.Field.f
+            ((y
+             : (_, _, _ : value) Fieldslib.Field.t_with_perm)
+             [@error_message
+               "Hint: did you derive [fields ~iterators:map_poly] on a record with \
+                non-value fields?"])
+        ; record__.Fieldslib.Field.f
+            ((z
+             : (_, _, _ : value) Fieldslib.Field.t_with_perm)
+             [@error_message
+               "Hint: did you derive [fields ~iterators:map_poly] on a record with \
+                non-value fields?"])
+        ; record__.Fieldslib.Field.f
+            ((f
+             : (_, _, _ : value) Fieldslib.Field.t_with_perm)
+             [@error_message
+               "Hint: did you derive [fields ~iterators:map_poly] on a record with \
+                non-value fields?"])
         ]
       ;;
 
@@ -327,7 +349,7 @@ module Everything = struct
 
       module Direct = struct
         let (iter @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
@@ -342,7 +364,7 @@ module Everything = struct
         let _ = iter
 
         let (fold @ portable)
-          record__
+          (record__ : t)
           ~init:init__
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
@@ -363,7 +385,7 @@ module Everything = struct
         let _ = fold
 
         let (for_all @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
@@ -379,7 +401,7 @@ module Everything = struct
         let _ = for_all
 
         let (exists @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
@@ -395,7 +417,7 @@ module Everything = struct
         let _ = exists
 
         let (to_list @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
@@ -411,7 +433,7 @@ module Everything = struct
         let _ = to_list
 
         let (fold_right @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
@@ -433,11 +455,12 @@ module Everything = struct
         let _ = fold_right
 
         let (map @ portable)
-          record__
+          (record__ : t)
           ~x:(local_ x_fun__)
           ~y:(local_ y_fun__)
           ~z:(local_ z_fun__)
           ~f:(local_ f_fun__)
+          : t
           =
           { x = x_fun__ x record__ record__.x
           ; y = y_fun__ y record__ record__.y
@@ -448,7 +471,7 @@ module Everything = struct
 
         let _ = map
 
-        let (set_all_mutable_fields @ portable) (local_ _record__) ~y =
+        let (set_all_mutable_fields @ portable) (local_ (_record__ : t)) ~y =
           let _record__ = Fieldslib.Field.For_generated_code.opaque_identity _record__ in
           _record__.y <- y
         [@@inline always]
