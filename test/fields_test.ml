@@ -141,8 +141,7 @@ let _ =
 ;;
 
 module Warnings : sig
-  (* could generate an unused warning but for crazy reasons, only
-     when the type is private *)
+  (* could generate an unused warning but for crazy reasons, only when the type is private *)
   type t = private { foo : int } [@@deriving fields ~getters]
 
   val foo : string
@@ -195,8 +194,8 @@ module%test [@name "set_all_mutable_fields"] _ = struct
   ;;
 end
 
-(* Sometimes it's convenient for the type of the accumulator to change as you handle
-   the individual fields. *)
+(* Sometimes it's convenient for the type of the accumulator to change as you handle the
+   individual fields. *)
 module M
     (F1 : sig
        type t =
