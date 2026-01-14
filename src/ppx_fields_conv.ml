@@ -1,7 +1,7 @@
-(* Generated code should depend on the environment in scope as little as
-   possible.  E.g. rather than [foo = []] do [match foo with [] ->], to eliminate the
-   use of [=].  It is especially important to not use polymorphic comparisons, since we
-   are moving more and more to code that doesn't have them in scope. *)
+(* Generated code should depend on the environment in scope as little as possible. E.g.
+   rather than [foo = []] do [match foo with [] ->], to eliminate the use of [=]. It is
+   especially important to not use polymorphic comparisons, since we are moving more and
+   more to code that doesn't have them in scope. *)
 
 open Base
 open Printf
@@ -44,8 +44,8 @@ let check_no_collision
   in
   let deriving_local_getters = Set.mem selection (Per_field Local_getters) in
   (* For a type that both appears to have been templated over [local] and derives
-       [~local_getters], [getter [@mode local]] for some [getter] is ambiguous, so we
-       prohibit this combination. *)
+     [~local_getters], [getter [@mode local]] for some [getter] is ambiguous, so we
+     prohibit this combination. *)
   if String.is_substring ~substring:"__local" ptype_name.txt && deriving_local_getters
   then
     Location.raise_errorf
@@ -131,8 +131,7 @@ module A = struct
               (match constraint_.ret_type_constraint with
                | Some _ ->
                  (* If there is already a [ret_constr] on the function, move the
-                    [ret_constr] we wish to add to be a constraint on the function
-                    body *)
+                    [ret_constr] we wish to add to be a constraint on the function body *)
                  let body =
                    let constr expr = [%expr ([%e expr] : [%t ret_constr])] in
                    match body with
@@ -736,8 +735,8 @@ module Gen_sig = struct
              let attrs =
                let attr =
                  (* fields of functions are only guaranteed to be zero-alloc on the field
-                  access. Ppx_fields cannot assume that applying the function is also
-                  zero-alloc, so we add the [arity 1] payload to all getters. *)
+                    access. Ppx_fields cannot assume that applying the function is also
+                    zero-alloc, so we add the [arity 1] payload to all getters. *)
                  A.zero_alloc_attr ~arity:(Some 1) ~loc
                in
                Option.some_if gen_zero_alloc_attrs attr |> Option.to_list
@@ -890,8 +889,8 @@ module Gen_sig = struct
   ;;
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
     match selection with
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
@@ -973,8 +972,8 @@ module Gen_struct = struct
           )
         ; ( Selector.Per_field Local_getters
           , (* Because mode mangling happens last in ppx_template, it is straightforwardly
-             correct to continue using the existing naming scheme for local getters, where
-             [__local] is appended to the name of the normal getter. *)
+               correct to continue using the existing naming scheme for local getters,
+               where [__local] is appended to the name of the normal getter. *)
             getter_code
               "__local"
               (fun a b -> [%expr fun ([%p a] : [%t r_typ]) -> [%e b]])
@@ -1472,7 +1471,8 @@ module Gen_struct = struct
       in
       (* As of 2019-06-25, flambda generates extra mov instructions when calling
          [Fields.Direct.set_all_mutable_fields] on a top-level record.
-         [Stdlib.Sys.opaque_identity] causes flambda to generate the correct assembly here.
+         [Stdlib.Sys.opaque_identity] causes flambda to generate the correct assembly
+         here.
       *)
       [%expr
         let [%p pvar ~loc record_name] =
@@ -1615,8 +1615,8 @@ module Gen_struct = struct
   ;;
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
     match selection with
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->

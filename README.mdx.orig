@@ -519,7 +519,7 @@ By default, `ppx_fields_conv` will generate `[@@zero_alloc]` attributes for all 
 setters, and `set_all_mutable_fields`. It is possible, however, that the generated
 implementations for a given record may actually allocate, causing the compiler to complain
 (this can happen e.g. if your record contains all float fields, or you mask the generated
-code with custom definitions). 
+code with custom definitions).
 
 ```ocaml env=alloc
 module Some_float_type = struct
@@ -606,8 +606,8 @@ let ( = ) a b : bool =
 ```mdx-error
 Lines 4-8, characters 5-34:
 Error: This expression has type
-         symbol:local_
-         (([< `Read | `Set_and_create ], t, string) Field.t_with_perm -> bool) ->
+         symbol:(([< `Read | `Set_and_create ], t, string) Field.t_with_perm ->
+                 bool) @ local ->
          bool
        but an expression was expected of type bool
   Hint: This function application is partial,
