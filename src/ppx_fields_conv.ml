@@ -889,8 +889,8 @@ module Gen_sig = struct
   ;;
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
     match selection with
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
@@ -1472,7 +1472,8 @@ module Gen_struct = struct
       in
       (* As of 2019-06-25, flambda generates extra mov instructions when calling
          [Fields.Direct.set_all_mutable_fields] on a top-level record.
-         [Stdlib.Sys.opaque_identity] causes flambda to generate the correct assembly here.
+         [Stdlib.Sys.opaque_identity] causes flambda to generate the correct assembly
+         here.
       *)
       [%expr
         let [%p pvar ~loc record_name] =
@@ -1615,8 +1616,8 @@ module Gen_struct = struct
   ;;
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~unboxed tds in
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
+    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
     match selection with
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
