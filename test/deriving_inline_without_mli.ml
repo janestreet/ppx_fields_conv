@@ -78,7 +78,7 @@ module Everything = struct
     ; z : float
     ; f : (string -> string[@equal.ignore])
     }
-  [@@deriving equal]
+  [@@deriving equal ~localize]
   [@@deriving_inline
     fields
       ~getters

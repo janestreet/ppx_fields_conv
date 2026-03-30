@@ -75,7 +75,7 @@ module Everything : sig
     ; z : float
     ; f : string -> string
     }
-  [@@deriving equal]
+  [@@deriving equal ~localize]
   [@@deriving_inline
     fields
       ~getters

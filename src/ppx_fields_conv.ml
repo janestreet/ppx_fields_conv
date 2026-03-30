@@ -890,7 +890,7 @@ module Gen_sig = struct
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
+    let tds = Ppx_helpers.with_implicit_unboxed_types ~loc ~unboxed tds in
     match selection with
     | Error error -> [ psig_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
@@ -1616,7 +1616,7 @@ module Gen_struct = struct
 
   let generate ~ctxt (rec_flag, tds) selection ~unboxed =
     let loc = Expansion_context.Deriver.derived_item_loc ctxt in
-    let tds = Ppx_helpers.with_implicit_unboxed_records ~loc ~unboxed tds in
+    let tds = Ppx_helpers.with_implicit_unboxed_types ~loc ~unboxed tds in
     match selection with
     | Error error -> [ pstr_extension ~loc (Location.Error.to_extension error) [] ]
     | Ok selection ->
