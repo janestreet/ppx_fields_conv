@@ -41,8 +41,8 @@ let _ = (Fields.a :> (_, _) Fieldslib.Field.t)
   {|
 Line _, characters _-_:
 Error: This expression cannot be coerced to type
-         ('a, 'b) Fieldslib.Field.t =
-           ([ `Read | `Set_and_create ], 'a, 'b) Base.Field.t_with_perm;
+         ('c, 'd) Fieldslib.Field.t =
+           ([ `Read | `Set_and_create ], 'c, 'd) Base.Field.t_with_perm;
        it has type ([< `Read ], t, int) Base.Field.t_with_perm
        but is here used with type
          ([> `Read | `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
@@ -96,8 +96,8 @@ let _ = (T.Fields.a :> (_, _) Fieldslib.Field.t)
   {|
 Line _, characters _-_:
 Error: This expression cannot be coerced to type
-         ('a, 'b) Fieldslib.Field.t =
-           ([ `Read | `Set_and_create ], 'a, 'b) Base.Field.t_with_perm;
+         ('c, 'd) Fieldslib.Field.t =
+           ([ `Read | `Set_and_create ], 'c, 'd) Base.Field.t_with_perm;
        it has type
          (T.t, int) Fieldslib.Field.readonly_t =
            ([ `Read ], T.t, int) Base.Field.t_with_perm
