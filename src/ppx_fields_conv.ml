@@ -11,11 +11,12 @@ open Ppxlib_jane.Ast_builder.Default
 module Selector = Selector
 module Modes = Ppxlib_jane.Shim.Modes
 
-let check_no_collision
+let get_all_collisions
   ~(selection : (Selector.t, _) Set.t)
   ~ptype_name
   ~check_unboxed_collision
   ~(labdecs : label_declaration list)
+  : Location.Error.t list
   =
   let generated_funs =
     Set.to_list selection
@@ -46,19 +47,29 @@ let check_no_collision
   (* For a type that both appears to have been templated over [local] and derives
      [~local_getters], [getter [@mode local]] for some [getter] is ambiguous, so we
      prohibit this combination. *)
-  if String.is_substring ~substring:"__local" ptype_name.txt && deriving_local_getters
-  then
-    Location.raise_errorf
-      ~loc:ptype_name.loc
-      "ppx_fields_conv: type name %S conflicts with local getters"
-      ptype_name.txt;
-  List.iter labdecs ~f:(fun { pld_name; pld_loc; _ } ->
-    if List.mem generated_funs pld_name.txt ~equal:String.equal
+  let type_name_error =
+    if String.is_substring ~substring:"__local" ptype_name.txt && deriving_local_getters
     then
-      Location.raise_errorf
-        ~loc:pld_loc
-        "ppx_fields_conv: field name %S conflicts with one of the generated functions"
-        pld_name.txt)
+      [ Location.Error.createf
+          ~loc:ptype_name.loc
+          "ppx_fields_conv: type name %S conflicts with local getters"
+          ptype_name.txt
+      ]
+    else []
+  in
+  let field_errors =
+    List.filter_map labdecs ~f:(fun { pld_name; pld_loc; _ } ->
+      if List.mem generated_funs pld_name.txt ~equal:String.equal
+      then
+        Some
+          (Location.Error.createf
+             ~loc:pld_loc
+             "ppx_fields_conv: field name %S conflicts with one of the generated \
+              functions"
+             pld_name.txt)
+      else None)
+  in
+  type_name_error @ field_errors
 ;;
 
 let no_zero_alloc_type_attr =
@@ -611,31 +622,64 @@ module Gen_sig = struct
     A.sig_item ~loc ~portable ~univars "to_list" t
   ;;
 
+  (* Append [suffix] to all [Ptyp_var]s in [ty] *)
+  let append_to_typ_vars ~suffix ty =
+    let go =
+      object
+        inherit Ast_traverse.map as super
+
+        method! core_type_desc ty_desc =
+          match Ppxlib_jane.Shim.Core_type_desc.of_parsetree ty_desc with
+          | Ptyp_var (name, jkind) ->
+            Ppxlib_jane.Shim.Core_type_desc.to_parsetree (Ptyp_var (name ^ suffix, jkind))
+          | _ -> super#core_type_desc ty_desc
+      end
+    in
+    go#core_type ty
+  ;;
+
+  (* It is sufficiently hygienic to indiscriminately append a suffix to all ptyp_vars when
+     generating the output types because the only source of type variables other than the
+     arguments to the record itself is universally quantified function fields, and these
+     are already unsupported in [map] and [direct_map] *)
   let map_fun ~ty_name ~tps ~loc ~portable labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
+    let with_output_vars =
+      append_to_typ_vars ~suffix:(gen_symbol ~prefix:"__map_output" ())
+    in
+    let output_tps = List.map ~f:with_output_vars tps in
+    let output_record = apply_type ~loc ~ty_name ~tps:output_tps in
     let f =
       field_arg ~loc ~private_:Public ~record (fun ~field ~ty:field_ty ->
-        [%type: [%t field] -> [%t Create.curry ~loc field_ty]])
+        [%type: [%t field] -> [%t Create.curry ~loc (with_output_vars field_ty)]])
     in
     let types = List.map labdecs ~f in
-    let t = Create.lambda_sig ~modes:(Modes.local ~loc) ~loc types record in
-    A.sig_item ~loc ~portable ~univars:tps "map" t
+    let t = Create.lambda_sig ~modes:(Modes.local ~loc) ~loc types output_record in
+    A.sig_item ~loc ~portable ~univars:(tps @ output_tps) "map" t
   ;;
 
   let direct_map_fun ~ty_name ~tps ~portable ~loc labdecs =
     let record = apply_type ~loc ~ty_name ~tps in
+    let with_output_vars =
+      append_to_typ_vars ~suffix:(gen_symbol ~prefix:"__direct_map_output" ())
+    in
+    let output_tps = List.map ~f:with_output_vars tps in
+    let output_record = apply_type ~loc ~ty_name ~tps:output_tps in
     let f =
       field_arg ~loc ~private_:Public ~record (fun ~field ~ty:field_ty ->
         [%type:
-          [%t field] -> [%t record] -> [%t field_ty] -> [%t Create.curry ~loc field_ty]])
+          [%t field]
+          -> [%t record]
+          -> [%t field_ty]
+          -> [%t Create.curry ~loc (with_output_vars field_ty)]])
     in
     let types = List.map labdecs ~f in
     let t =
-      record
+      output_record
       |> Create.lambda_sig ~modes:(Modes.local ~loc) ~loc types
       |> Create.lambda_sig ~loc [ Nolabel, record ]
     in
-    A.sig_item ~loc ~portable ~univars:tps "map" t
+    A.sig_item ~loc ~portable ~univars:(tps @ output_tps) "map" t
   ;;
 
   let map_poly ~private_ ~ty_name ~portable ~tps ~loc _ =
@@ -873,18 +917,24 @@ module Gen_sig = struct
     let ptype_kind = Ppxlib_jane.Shim.Type_kind.of_parsetree ptype_kind in
     match ptype_kind with
     | Ptype_record labdecs | Ptype_record_unboxed_product labdecs ->
-      check_no_collision ~selection ~ptype_name ~check_unboxed_collision ~labdecs;
-      let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
-      let portable = not (has_fields_nonportable_attr td) in
-      record
-        ~private_
-        ~ty_name
-        ~tps
-        ~portable
-        ~loc
-        ~selection
-        ~gen_zero_alloc_attrs
-        labdecs
+      (match
+         get_all_collisions ~selection ~ptype_name ~check_unboxed_collision ~labdecs
+       with
+       | _ :: _ as errors ->
+         List.map errors ~f:(fun error ->
+           psig_extension ~loc (Location.Error.to_extension error) [])
+       | [] ->
+         let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
+         let portable = not (has_fields_nonportable_attr td) in
+         record
+           ~private_
+           ~ty_name
+           ~tps
+           ~portable
+           ~loc
+           ~selection
+           ~gen_zero_alloc_attrs
+           labdecs)
     | _ -> []
   ;;
 
@@ -1597,20 +1647,26 @@ module Gen_struct = struct
     in
     match ptype_kind with
     | Ptype_record labdecs | Ptype_record_unboxed_product labdecs ->
-      check_no_collision ~selection ~ptype_name ~check_unboxed_collision ~labdecs;
-      let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
-      let portable = not (has_fields_nonportable_attr td) in
-      record
-        ~loc
-        ~portable
-        ~selection
-        ~gen_zero_alloc_attrs
-        { private_
-        ; name = ty_name
-        ; is_parameterized = not (List.is_empty ptype_params)
-        ; labdecs
-        ; unboxed
-        }
+      (match
+         get_all_collisions ~selection ~ptype_name ~check_unboxed_collision ~labdecs
+       with
+       | _ :: _ as errors ->
+         List.map errors ~f:(fun error ->
+           pstr_extension ~loc (Location.Error.to_extension error) [])
+       | [] ->
+         let gen_zero_alloc_attrs = not (has_fields_no_zero_alloc_attr td) in
+         let portable = not (has_fields_nonportable_attr td) in
+         record
+           ~loc
+           ~portable
+           ~selection
+           ~gen_zero_alloc_attrs
+           { private_
+           ; name = ty_name
+           ; is_parameterized = not (List.is_empty ptype_params)
+           ; labdecs
+           ; unboxed
+           })
     | _ -> []
   ;;
 
