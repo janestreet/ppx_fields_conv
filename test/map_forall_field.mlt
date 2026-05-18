@@ -1,0 +1,12 @@
+(* Deriving [map] on a record with a universally-quantified function field produces
+   invalid code. This test documents the current (broken) behavior. *)
+
+type t = { f : 'a. 'a -> 'a } [@@deriving fields ~iterators:map]
+
+[%%expect
+  {|
+Line _, characters _-_:
+Error: This expression has type t -> 'b -> 'b
+       but an expression was expected of type t -> ('a. 'a -> 'a)
+       Type 'b -> 'b is not compatible with type 'a. 'a -> 'a
+|}]
