@@ -25,7 +25,7 @@ module All_floats : sig
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : local_ t -> y:float -> unit @@ portable
+        val set_all_mutable_fields : t @ local -> y:float -> unit @@ portable
       end
     end
   end
@@ -68,7 +68,7 @@ module Not_all_float : sig
 
     module Fields : sig
       module Direct : sig
-        val set_all_mutable_fields : local_ t -> y:float -> unit @@ portable
+        val set_all_mutable_fields : t @ local -> y:float -> unit @@ portable
         [@@zero_alloc
           custom_error_message
             "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \
@@ -158,7 +158,7 @@ module All_float_dot_t : sig
     module Fields : sig
       module Direct : sig
         val set_all_mutable_fields
-          :  local_ t
+          :  t @ local
           -> y:Float.t
           -> z:Float.Stable.V1.t
           -> unit

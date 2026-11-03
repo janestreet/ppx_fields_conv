@@ -16,16 +16,17 @@ module _ : sig
     module Fields : sig
       val map
         : 'a 'b 'a__map_output__001_ 'b__map_output__001_.
-        x:local_ ((('a, 'b) t, 'a list) Fieldslib.Field.t -> 'a__map_output__001_ list)
-        -> y:
-             local_ ((('a, 'b) t, 'b option) Fieldslib.Field.t
-                     -> 'b__map_output__001_ option)
+        x:((('a, 'b) t, 'a list) Fieldslib.Field.t -> 'a__map_output__001_ list) @ local
+        -> y:((('a, 'b) t, 'b option) Fieldslib.Field.t -> 'b__map_output__001_ option)
+           @ local
         -> z:
-             local_ ((('a, 'b) t, ('a * 'b) array) Fieldslib.Field.t
-                     -> ('a__map_output__001_ * 'b__map_output__001_) array)
+             ((('a, 'b) t, ('a * 'b) array) Fieldslib.Field.t
+              -> ('a__map_output__001_ * 'b__map_output__001_) array)
+           @ local
         -> w:
-             local_ ((('a, 'b) t, 'a -> 'b) Fieldslib.Field.t
-                     -> ('a__map_output__001_ -> 'b__map_output__001_))
+             ((('a, 'b) t, 'a -> 'b) Fieldslib.Field.t
+              -> ('a__map_output__001_ -> 'b__map_output__001_))
+           @ local
         -> ('a__map_output__001_, 'b__map_output__001_) t
         @@ portable
 
@@ -34,26 +35,29 @@ module _ : sig
           : 'a 'b 'a__direct_map_output__002_ 'b__direct_map_output__002_.
           ('a, 'b) t
           -> x:
-               local_ ((('a, 'b) t, 'a list) Fieldslib.Field.t
-                       -> ('a, 'b) t
-                       -> 'a list
-                       -> 'a__direct_map_output__002_ list)
+               ((('a, 'b) t, 'a list) Fieldslib.Field.t
+                -> ('a, 'b) t
+                -> 'a list
+                -> 'a__direct_map_output__002_ list)
+             @ local
           -> y:
-               local_ ((('a, 'b) t, 'b option) Fieldslib.Field.t
-                       -> ('a, 'b) t
-                       -> 'b option
-                       -> 'b__direct_map_output__002_ option)
+               ((('a, 'b) t, 'b option) Fieldslib.Field.t
+                -> ('a, 'b) t
+                -> 'b option
+                -> 'b__direct_map_output__002_ option)
+             @ local
           -> z:
-               local_ ((('a, 'b) t, ('a * 'b) array) Fieldslib.Field.t
-                       -> ('a, 'b) t
-                       -> ('a * 'b) array
-                       -> ('a__direct_map_output__002_ * 'b__direct_map_output__002_)
-                            array)
+               ((('a, 'b) t, ('a * 'b) array) Fieldslib.Field.t
+                -> ('a, 'b) t
+                -> ('a * 'b) array
+                -> ('a__direct_map_output__002_ * 'b__direct_map_output__002_) array)
+             @ local
           -> w:
-               local_ ((('a, 'b) t, 'a -> 'b) Fieldslib.Field.t
-                       -> ('a, 'b) t
-                       -> ('a -> 'b)
-                       -> ('a__direct_map_output__002_ -> 'b__direct_map_output__002_))
+               ((('a, 'b) t, 'a -> 'b) Fieldslib.Field.t
+                -> ('a, 'b) t
+                -> ('a -> 'b)
+                -> ('a__direct_map_output__002_ -> 'b__direct_map_output__002_))
+             @ local
           -> ('a__direct_map_output__002_, 'b__direct_map_output__002_) t
           @@ portable
       end

@@ -6,7 +6,7 @@ type t = { f : 'a. 'a -> 'a } [@@deriving fields ~iterators:map]
 [%%expect
   {|
 Line _, characters _-_:
-Error: This expression has type t -> 'b -> 'b
+Error: The value f has type t -> 'b -> 'b
        but an expression was expected of type t -> ('a. 'a -> 'a)
        Type 'b -> 'b is not compatible with type 'a. 'a -> 'a
 |}]

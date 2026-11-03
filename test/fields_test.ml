@@ -241,3 +241,13 @@ module Unused_warnings : sig end = struct
     }
   [@@deriving fields ~getters ~iterators:for_all ~direct_iterators:for_all]
 end
+
+module Unused_type_alias_warning : sig end = struct
+  [@@@ocaml.warning "+unused-type-declaration"]
+
+  class type scope = object
+    method scope : unit
+  end
+
+  type 'a t = { auth : #scope as 'a } [@@deriving fields ~fields]
+end

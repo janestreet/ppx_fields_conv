@@ -1,5 +1,4 @@
-ppx_fields_conv
-===============
+# ppx_fields_conv
 
 <!-- set up
 ```ocaml
@@ -536,11 +535,11 @@ type t =
 ```
 ```mdx-error
 Line 2, characters 7-8:
-Error: Annotation check for zero_alloc failed on function TOP9.x (camlTOP9__x_172_177_code).
+Error: Annotation check for zero_alloc failed on function TOP9.x (camlTOP9__x_88_177_code).
 Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
 
 Line 3, characters 7-8:
-Error: Annotation check for zero_alloc failed on function TOP9.y (camlTOP9__y_171_176_code).
+Error: Annotation check for zero_alloc failed on function TOP9.y (camlTOP9__y_87_176_code).
 Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
 ```
 
@@ -610,8 +609,7 @@ Error: This expression has type
                  bool) @ local ->
          bool
        but an expression was expected of type bool
-  Hint: This function application is partial,
-  maybe some arguments are missing.
+Hint: This function application is partial, maybe some arguments are missing.
 ```
 
 Or similarly you could use `fold` to create `to_string` function:
@@ -698,17 +696,17 @@ Note that `map_poly` cannot currently be used with non-value record fields. Reac
 the maintainers if you have an example of a case where this would be useful.
 
 ```ocaml
-type t = { x : int64# } [@@deriving fields ~iterators:map_poly]
+type t = { x : int64_u } [@@deriving fields ~iterators:map_poly]
 ```
 ```mdx-error
 Line 1, characters 6-7:
-Error: This expression has type
-         ([< `Read | `Set_and_create ], t, int64#) Field.t_with_perm
+Error: The value x has type
+         ([< `Read | `Set_and_create ], t, int64_u) Field.t_with_perm
        but an expression was expected of type
          ([< `Read | `Set_and_create ], t, 'a) Field.t_with_perm
        Hint: did you derive [fields ~iterators:map_poly] on a record with non-value fields?
-       The layout of int64# is bits64
-         because it is the unboxed version of the primitive type int64.
-       But the layout of int64# must be a value layout
+       The layout of int64_u is bits64
+         because it is the primitive type int64_u.
+       But the layout of int64_u must be a value layout
          because of the annotation on the wildcard _ at line 1, characters 6-7.
 ```

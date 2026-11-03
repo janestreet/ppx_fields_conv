@@ -31,7 +31,7 @@ module Local_getters : sig
   include sig
     [@@@ocaml.warning "-32"]
 
-    val z__local : local_ t -> local_ float @@ portable
+    val z__local : t @ local -> float @ local @@ portable
     [@@zero_alloc
       arity
         1
@@ -39,7 +39,7 @@ module Local_getters : sig
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
          [@@deriving fields] tries to make by default."]
 
-    val y__local : local_ t -> bool @@ portable
+    val y__local : t @ local -> bool @@ portable
     [@@zero_alloc
       arity
         1
@@ -47,7 +47,7 @@ module Local_getters : sig
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
          [@@deriving fields] tries to make by default."]
 
-    val x__local : local_ t -> local_ int @@ portable
+    val x__local : t @ local -> int @ local @@ portable
     [@@zero_alloc
       arity
         1
@@ -55,7 +55,7 @@ module Local_getters : sig
         "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
          [@@deriving fields] tries to make by default."]
 
-    val w__local : local_ t -> string @@ portable
+    val w__local : t @ local -> string @@ portable
     [@@zero_alloc
       arity
         1
@@ -147,19 +147,19 @@ module Everything : sig
       val fold
         : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
         init:'acc__0
-        -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1)
-        -> y:local_ ('acc__1 -> (t, bool) Fieldslib.Field.t -> 'acc__2)
-        -> z:local_ ('acc__2 -> (t, float) Fieldslib.Field.t -> 'acc__3)
-        -> f:local_ ('acc__3 -> (t, string -> string) Fieldslib.Field.t -> 'acc__4)
+        -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> 'acc__1) @ local
+        -> y:('acc__1 -> (t, bool) Fieldslib.Field.t -> 'acc__2) @ local
+        -> z:('acc__2 -> (t, float) Fieldslib.Field.t -> 'acc__3) @ local
+        -> f:('acc__3 -> (t, string -> string) Fieldslib.Field.t -> 'acc__4) @ local
         -> 'acc__4
         @@ portable
 
       val fold_right
         : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
-        x:local_ ((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> 'acc__2 -> 'acc__3)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> 'acc__1 -> 'acc__2)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> 'acc__0 -> 'acc__1)
+        x:((t, int) Fieldslib.Field.t -> 'acc__3 -> 'acc__4) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> 'acc__2 -> 'acc__3) @ local
+        -> z:((t, float) Fieldslib.Field.t -> 'acc__1 -> 'acc__2) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> 'acc__0 -> 'acc__1) @ local
         -> init:'acc__0
         -> 'acc__4
         @@ portable
@@ -180,62 +180,63 @@ module Everything : sig
       val create : x:int -> y:bool -> z:float -> f:(string -> string) -> t @@ portable
 
       val map
-        :  x:local_ ((t, int) Fieldslib.Field.t -> int)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> bool)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> float)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> (string -> string))
+        :  x:((t, int) Fieldslib.Field.t -> int) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> bool) @ local
+        -> z:((t, float) Fieldslib.Field.t -> float) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> (string -> string)) @ local
         -> t
         @@ portable
 
       val iter
-        :  x:local_ ((t, int) Fieldslib.Field.t -> unit)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> unit)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> unit)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> unit)
+        :  x:((t, int) Fieldslib.Field.t -> unit) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> unit) @ local
+        -> z:((t, float) Fieldslib.Field.t -> unit) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> unit) @ local
         -> unit
         @@ portable
 
       val for_all
-        :  x:local_ ((t, int) Fieldslib.Field.t -> bool)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> bool)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> bool)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> bool)
+        :  x:((t, int) Fieldslib.Field.t -> bool) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> bool) @ local
+        -> z:((t, float) Fieldslib.Field.t -> bool) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> bool) @ local
         -> bool
         @@ portable
 
       val exists
-        :  x:local_ ((t, int) Fieldslib.Field.t -> bool)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> bool)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> bool)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> bool)
+        :  x:((t, int) Fieldslib.Field.t -> bool) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> bool) @ local
+        -> z:((t, float) Fieldslib.Field.t -> bool) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> bool) @ local
         -> bool
         @@ portable
 
       val to_list
         : 'elem__.
-        x:local_ ((t, int) Fieldslib.Field.t -> 'elem__)
-        -> y:local_ ((t, bool) Fieldslib.Field.t -> 'elem__)
-        -> z:local_ ((t, float) Fieldslib.Field.t -> 'elem__)
-        -> f:local_ ((t, string -> string) Fieldslib.Field.t -> 'elem__)
+        x:((t, int) Fieldslib.Field.t -> 'elem__) @ local
+        -> y:((t, bool) Fieldslib.Field.t -> 'elem__) @ local
+        -> z:((t, float) Fieldslib.Field.t -> 'elem__) @ local
+        -> f:((t, string -> string) Fieldslib.Field.t -> 'elem__) @ local
         -> 'elem__ list
         @@ portable
 
       val map_poly
         : 'x0.
-        local_ ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user -> 'x0 list
+        ([< `Read | `Set_and_create ], t, 'x0) Fieldslib.Field.user @ local -> 'x0 list
         @@ portable
 
       module Direct : sig
         val iter
           :  t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> unit)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> unit)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> unit)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> unit) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> unit) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> unit) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> unit)
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> unit)
+             @ local
           -> unit
           @@ portable
 
@@ -243,88 +244,94 @@ module Everything : sig
           : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
           t
           -> init:'acc__0
-          -> x:local_ ('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1)
-          -> y:local_ ('acc__1 -> (t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2)
-          -> z:local_ ('acc__2 -> (t, float) Fieldslib.Field.t -> t -> float -> 'acc__3)
+          -> x:('acc__0 -> (t, int) Fieldslib.Field.t -> t -> int -> 'acc__1) @ local
+          -> y:('acc__1 -> (t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2) @ local
+          -> z:('acc__2 -> (t, float) Fieldslib.Field.t -> t -> float -> 'acc__3) @ local
           -> f:
-               local_ ('acc__3
-                       -> (t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> 'acc__4)
+               ('acc__3
+                -> (t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> 'acc__4)
+             @ local
           -> 'acc__4
           @@ portable
 
         val for_all
           :  t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> bool)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> bool)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> bool)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> bool) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> bool) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> bool) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> bool)
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> bool)
+             @ local
           -> bool
           @@ portable
 
         val exists
           :  t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> bool)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> bool)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> bool)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> bool) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> bool) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> bool) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> bool)
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> bool)
+             @ local
           -> bool
           @@ portable
 
         val to_list
           : 'elem__.
           t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'elem__)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> 'elem__)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> 'elem__)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'elem__) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> 'elem__) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> 'elem__) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> 'elem__)
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> 'elem__)
+             @ local
           -> 'elem__ list
           @@ portable
 
         val fold_right
           : 'acc__0 'acc__1 'acc__2 'acc__3 'acc__4.
           t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> 'acc__3 -> 'acc__4)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2 -> 'acc__3)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> 'acc__1 -> 'acc__2)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> 'acc__3 -> 'acc__4) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> 'acc__2 -> 'acc__3) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> 'acc__1 -> 'acc__2) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> 'acc__0
-                       -> 'acc__1)
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> 'acc__0
+                -> 'acc__1)
+             @ local
           -> init:'acc__0
           -> 'acc__4
           @@ portable
 
         val map
           :  t
-          -> x:local_ ((t, int) Fieldslib.Field.t -> t -> int -> int)
-          -> y:local_ ((t, bool) Fieldslib.Field.t -> t -> bool -> bool)
-          -> z:local_ ((t, float) Fieldslib.Field.t -> t -> float -> float)
+          -> x:((t, int) Fieldslib.Field.t -> t -> int -> int) @ local
+          -> y:((t, bool) Fieldslib.Field.t -> t -> bool -> bool) @ local
+          -> z:((t, float) Fieldslib.Field.t -> t -> float -> float) @ local
           -> f:
-               local_ ((t, string -> string) Fieldslib.Field.t
-                       -> t
-                       -> (string -> string)
-                       -> (string -> string))
+               ((t, string -> string) Fieldslib.Field.t
+                -> t
+                -> (string -> string)
+                -> (string -> string))
+             @ local
           -> t
           @@ portable
 
-        val set_all_mutable_fields : local_ t -> y:bool -> unit @@ portable
+        val set_all_mutable_fields : t @ local -> y:bool -> unit @@ portable
         [@@zero_alloc
           custom_error_message
             "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees \

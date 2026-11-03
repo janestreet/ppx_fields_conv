@@ -48,13 +48,13 @@ Line _, characters _-_:
 Error: allocation of 16 bytes for float
 
 Line _, characters _-_:
-Error: Annotation check for zero_alloc failed on function TOP3.M.my_float (camlTOP3__my_float_6_8_code).
+Error: Annotation check for zero_alloc failed on function TOP3.M.my_float (camlTOP3__my_float_3_8_code).
 Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
 
 Line _, characters _-_:
 Error: allocation of 16 bytes for float
 
 Line _, characters _-_:
-Error: Annotation check for zero_alloc failed on function TOP3.M.float (camlTOP3__float_7_9_code).
+Error: Annotation check for zero_alloc failed on function TOP3.M.float (camlTOP3__float_4_9_code).
 Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that [@@deriving fields] tries to make by default.
 |}]
