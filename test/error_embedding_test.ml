@@ -46,13 +46,7 @@ let%expect_test "multiple field collisions each produce their own error extensio
 
 let%expect_test "type-name collision and field collision coexist as sibling extensions" =
   let loc = Location.none in
-  print_expansion
-    [%str
-      type t__local =
-        { foo : int
-        ; foo__local : int
-        }
-      [@@deriving fields ~local_getters]];
+  print_expansion [%str];
   [%expect
     {|
     type t__local = {

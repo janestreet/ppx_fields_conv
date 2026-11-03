@@ -1,4 +1,4 @@
-open! Base
+open! Ppx_helpers.Base_lite
 open Ppxlib
 
 let selectors_are_mandatory = ref false
@@ -160,7 +160,11 @@ include Sexpable.Of_stringable (struct
 let compare = (Poly.compare : t -> t -> int)
 let equal = (Poly.equal : t -> t -> bool)
 
-include (val Comparator.make ~compare ~sexp_of_t)
+module Set = Set.Make (struct
+    type nonrec t = t
+
+    let compare = compare
+  end)
 
 let to_expression t ~loc =
   match t with
@@ -278,7 +282,7 @@ let selection list ~add_dependencies =
   let list =
     if add_dependencies then List.concat_map list ~f:with_dependencies else list
   in
-  Set.Using_comparator.of_list ~comparator list
+  Set.of_list list
 ;;
 
 let error_of_alists ~loc alists =

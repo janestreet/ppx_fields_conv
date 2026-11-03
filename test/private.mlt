@@ -18,7 +18,8 @@ let _ = Fieldslib.Field.fset Fields.a
 [%%expect
   {|
 Line _, characters _-_:
-Error: This expression has type ([< `Read ], t, int) Base.Field.t_with_perm
+Error: The value Fields.a has type
+         ([< `Read ], t, int) Base.Field.t_with_perm
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
@@ -29,7 +30,8 @@ let _ = Fieldslib.Field.setter Fields.a
 [%%expect
   {|
 Line _, characters _-_:
-Error: This expression has type ([< `Read ], t, int) Base.Field.t_with_perm
+Error: The value Fields.a has type
+         ([< `Read ], t, int) Base.Field.t_with_perm
        but an expression was expected of type
          ([> `Set_and_create ], 'a, 'b) Base.Field.t_with_perm
        The first variant type does not allow tag(s) `Set_and_create
@@ -69,7 +71,7 @@ let _ = Fieldslib.Field.fset T.Fields.a
 [%%expect
   {|
 Line _, characters _-_:
-Error: This expression has type
+Error: The value T.Fields.a has type
          (T.t, int) Fieldslib.Field.readonly_t =
            ([ `Read ], T.t, int) Base.Field.t_with_perm
        but an expression was expected of type
@@ -82,7 +84,7 @@ let _ = Fieldslib.Field.setter T.Fields.a
 [%%expect
   {|
 Line _, characters _-_:
-Error: This expression has type
+Error: The value T.Fields.a has type
          (T.t, int) Fieldslib.Field.readonly_t =
            ([ `Read ], T.t, int) Base.Field.t_with_perm
        but an expression was expected of type

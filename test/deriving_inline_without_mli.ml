@@ -31,42 +31,10 @@ module Local_getters = struct
   [@@deriving_inline fields ~local_getters]
 
   let _ = fun (_ : t) -> ()
-
-  let z__local (_r__ : t) = _r__.z
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = z__local
-
-  let y__local (_r__ : t) = _r__.y
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = y__local
-
-  let x__local (_r__ : t) = _r__.x
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = x__local
-
-  let w__local (_r__ : t) = _r__.w
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = w__local
+  let _ = z
+  let _ = y
+  let _ = x
+  let _ = w
 
   [@@@end]
 end
@@ -78,7 +46,7 @@ module Everything = struct
     ; z : float
     ; f : (string -> string[@equal.ignore])
     }
-  [@@deriving equal ~localize]
+  [@@deriving equal]
   [@@deriving_inline
     fields
       ~getters

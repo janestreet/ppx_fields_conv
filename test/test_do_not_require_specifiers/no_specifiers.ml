@@ -19,15 +19,7 @@ include struct
   ;;
 
   let _ = y
-
-  let y__local (_r__ : t) = _r__.y
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = y__local
+  let _ = y
 
   let set_y (_r__ : t) v__ = _r__.y <- v__
   [@@zero_alloc
@@ -46,15 +38,7 @@ include struct
   ;;
 
   let _ = x
-
-  let x__local (_r__ : t) = _r__.x
-  [@@zero_alloc
-    custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-  ;;
-
-  let _ = x__local
+  let _ = x
 
   module Fields = struct
     let names = [ "x"; "y" ]

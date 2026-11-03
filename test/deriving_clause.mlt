@@ -28,7 +28,8 @@ let () =
         match selectors with
         | Error error -> Location.Error.raise error
         | Ok set ->
-          List.map (Set.to_list set) ~f:(Selector.to_expression ~loc) |> elist ~loc
+          List.map (Selector.Set.to_list set) ~f:(Selector.to_expression ~loc)
+          |> elist ~loc
       in
       [%str let (selectors : Selector.t list) = [%e selectors_expr]])
   in

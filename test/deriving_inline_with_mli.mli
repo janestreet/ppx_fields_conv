@@ -30,38 +30,6 @@ module Local_getters : sig
 
   include sig
     [@@@ocaml.warning "-32"]
-
-    val z__local : t -> float
-    [@@zero_alloc
-      arity
-        1
-        custom_error_message
-        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-         [@@deriving fields] tries to make by default."]
-
-    val y__local : t -> bool
-    [@@zero_alloc
-      arity
-        1
-        custom_error_message
-        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-         [@@deriving fields] tries to make by default."]
-
-    val x__local : t -> int
-    [@@zero_alloc
-      arity
-        1
-        custom_error_message
-        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-         [@@deriving fields] tries to make by default."]
-
-    val w__local : t -> string
-    [@@zero_alloc
-      arity
-        1
-        custom_error_message
-        "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-         [@@deriving fields] tries to make by default."]
   end
   [@@ocaml.doc "@inline"]
 
@@ -75,7 +43,7 @@ module Everything : sig
     ; z : float
     ; f : string -> string
     }
-  [@@deriving equal ~localize]
+  [@@deriving equal]
   [@@deriving_inline
     fields
       ~getters

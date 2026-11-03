@@ -17,14 +17,6 @@ include sig
       "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
        [@@deriving fields] tries to make by default."]
 
-  val y__local : t -> string list
-  [@@zero_alloc
-    arity
-      1
-      custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-
   val set_y : t -> string list -> unit
   [@@zero_alloc
     custom_error_message
@@ -32,14 +24,6 @@ include sig
        [@@deriving fields] tries to make by default."]
 
   val x : t -> int
-  [@@zero_alloc
-    arity
-      1
-      custom_error_message
-      "Hint: add [@@fields.no_zero_alloc] to disable the zero-alloc guarantees that \
-       [@@deriving fields] tries to make by default."]
-
-  val x__local : t -> int
   [@@zero_alloc
     arity
       1

@@ -3,23 +3,24 @@
    especially important to not use polymorphic comparisons, since we are moving more and
    more to code that doesn't have them in scope. *)
 
-open Base
+open Ppx_helpers.Base_lite
 open Printf
 open Ppxlib
 open Ast_builder.Default
-open Ppxlib_jane.Ast_builder.Default
+open Ppxlib_jane
+open Ast_builder.Default
 module Selector = Selector
 module Modes = Ppxlib_jane.Shim.Modes
 
 let get_all_collisions
-  ~(selection : (Selector.t, _) Set.t)
+  ~(selection : Selector.Set.t)
   ~ptype_name
   ~check_unboxed_collision
   ~(labdecs : label_declaration list)
   : Location.Error.t list
   =
   let generated_funs =
-    Set.to_list selection
+    Selector.Set.to_list selection
     |> List.concat_map ~f:(function
       | Selector.Per_field Fields ->
         (* These match the name of the field, and do not generate a conflict. Fields of
@@ -43,7 +44,7 @@ let get_all_collisions
       | Iterator iterator -> [ Selector.Iterator.to_variable_name iterator ]
       | Direct_iterator iterator -> [ Selector.Direct_iterator.to_variable_name iterator ])
   in
-  let deriving_local_getters = Set.mem selection (Per_field Local_getters) in
+  let deriving_local_getters = Selector.Set.mem selection (Per_field Local_getters) in
   (* For a type that both appears to have been templated over [local] and derives
      [~local_getters], [getter [@mode local]] for some [getter] is ambiguous, so we
      prohibit this combination. *)
@@ -105,6 +106,29 @@ let strip_attributes =
   end
 ;;
 
+let unused_type_alias_warning_attribute ~loc =
+  attribute
+    ~loc
+    ~name:(Located.mk ~loc "ocaml.warning")
+    ~payload:(PStr [ pstr_eval ~loc (estring ~loc "-unused-type-declaration") [] ])
+;;
+
+let suppress_unused_type_alias_warnings =
+  object
+    inherit Ast_traverse.map as super
+
+    method! core_type ty =
+      let ty = super#core_type ty in
+      match ty.ptyp_desc with
+      | Ptyp_alias _ ->
+        { ty with
+          ptyp_attributes =
+            unused_type_alias_warning_attribute ~loc:ty.ptyp_loc :: ty.ptyp_attributes
+        }
+      | _ -> ty
+  end
+;;
+
 let fields_module_name ty_name =
   let ty_name, mangling = Ppx_helpers.demangle_template ty_name in
   let base_mod_name =
@@ -146,8 +170,7 @@ module A = struct
                  let body =
                    let constr expr = [%expr ([%e expr] : [%t ret_constr])] in
                    match body with
-                   | Pfunction_body expr ->
-                     Ppxlib_jane.Shim.Pexp_function.Pfunction_body (constr expr)
+                   | Pfunction_body expr -> Pfunction_body (constr expr)
                    | Pfunction_cases (cases, loc, attrs) ->
                      Pfunction_cases
                        ( List.map cases ~f:(fun case ->
@@ -158,10 +181,7 @@ module A = struct
                  constraint_, body
                | None ->
                  (* Otherwise, we can just move the [ret_constr] into [constraint_]. *)
-                 ( { constraint_ with
-                     ret_type_constraint =
-                       Some (Ppxlib_jane.Shim.Pexp_function.Pconstraint ret_constr)
-                   }
+                 ( { constraint_ with ret_type_constraint = Some (Pconstraint ret_constr) }
                  , body ))
           in
           { expr with
@@ -169,7 +189,7 @@ module A = struct
               Ppxlib_jane.Shim.Pexp_function.to_parsetree ~params ~constraint_ ~body
           })
     in
-    value_binding ~loc ~pat ~expr ~modes
+    value_binding ~loc ~pat ~expr ~constraint_:None ~modes
   ;;
 
   let str_item ?(attrs = []) ?(mangling = "") ?ret_constr ~loc ~portable name body =
@@ -320,8 +340,8 @@ let perm ~loc private_ =
 let field_t ~loc private_ tps =
   let id =
     match private_ with
-    | Private -> Longident.parse "Fieldslib.Field.readonly_t"
-    | Public -> Longident.parse "Fieldslib.Field.t"
+    | Private -> Ppxlib.Longident.parse "Fieldslib.Field.readonly_t"
+    | Public -> Ppxlib.Longident.parse "Fieldslib.Field.t"
   in
   ptyp_constr ~loc (Located.mk ~loc id) tps
 ;;
@@ -353,7 +373,9 @@ let module_defn defns ~name ~loc ~make_module =
 ;;
 
 let assemble ~loc ~selection ~fields_module ~make_module ~make_error alist =
-  let alist = List.filter alist ~f:(fun (selector, _) -> Set.mem selection selector) in
+  let alist =
+    List.filter alist ~f:(fun (selector, _) -> Selector.Set.mem selection selector)
+  in
   match List.is_empty alist with
   | true ->
     [ make_error
@@ -407,6 +429,7 @@ module Gen_sig = struct
     : arg_label * 'a
     =
     let { pld_name = name; pld_type = ty; _ } = labdec in
+    let ty = suppress_unused_type_alias_warnings#core_type ty in
     label_arg name.txt (f ~field:(field_t ~loc private_ [ record; ty ]) ~ty)
   ;;
 
@@ -703,7 +726,7 @@ module Gen_sig = struct
         [%t
           ptyp_constr
             ~loc
-            (Located.mk ~loc (Longident.parse "Fieldslib.Field.user"))
+            (Located.mk ~loc (Ppxlib.Longident.parse "Fieldslib.Field.user"))
             [ perm; record; fresh_variable ]]
         -> [%t fresh_variable] list]
     in
@@ -990,7 +1013,11 @@ module Gen_struct = struct
       let { pld_name = { txt = name; loc }; pld_type = field_ty; pld_mutable = m; _ } =
         labdec
       in
-      let field_ty = strip_attributes#core_type field_ty in
+      let field_ty =
+        field_ty
+        |> strip_attributes#core_type
+        |> suppress_unused_type_alias_warnings#core_type
+      in
       let zero_alloc_attr =
         (* structs don't need to specify the arity since any function fields will appear
            as a single arg *)
@@ -1127,6 +1154,7 @@ module Gen_struct = struct
                 ~loc
                 ~pat:(pvar ~loc field_name)
                 ~expr:[%expr [%e evar ~loc (field_name ^ "_gen__")] acc__]
+                ~constraint_:None
                 ~modes:[]
             ]
             acc)
@@ -1155,6 +1183,7 @@ module Gen_struct = struct
                   [%e evar ~loc (field_name ^ "_fun__")]
                     [%e evar ~loc field_name]
                     compile_acc__]
+              ~constraint_:None
               ~modes:[]
           ]
           acc)
